@@ -1,0 +1,7 @@
+Manifest-Version: 1.0
+Premain-Class: com.dbmonitor.agent.agent.AgentMain
+Agent-Class: com.dbmonitor.agent.agent.AgentMain
+Can-Redefine-Classes: true
+Can-Retransform-Classes: true
+Boot-Class-Path: db-monitor-agent-1.0.0-shaded.jar
+
