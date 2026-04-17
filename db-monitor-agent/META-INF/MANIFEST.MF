@@ -1,8 +1,0 @@
-Manifest-Version: 1.0
-Created-By: Maven JAR Plugin 3.4.1
-Build-Jdk-Spec: 21
-Agent-Class: com.dbmonitor.agent.DbMonitorAgent
-Can-Redefine-Classes: true
-Can-Retransform-Classes: true
-Premain-Class: com.dbmonitor.agent.DbMonitorAgent
-

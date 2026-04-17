@@ -1,8 +1,6 @@
 package com.dbmonitor.agent.model;
 
 public class DbConnectionEvent {
-
-    public DbConnectionEvent(){}
     private String applicationName;
     private String hostName;
     private String jvmId;
@@ -32,15 +30,6 @@ public class DbConnectionEvent {
 
         public DbConnectionEvent build() { return event; }
     }
-    public String getApplicationName() { return applicationName; }
-    public String getHostName() { return hostName; }
-    public String getJvmId() { return jvmId; }
-    public String getDatabaseType() { return databaseType; }
-    public String getOperationType() { return operationType; }
-    public long getTimestamp() { return timestamp; }
-    public long getDurationNs() { return durationNs; }
-    public boolean isSuccess() { return success; }
-    public String getMetadata() { return metadata; }
 
     @Override
     public String toString() {
