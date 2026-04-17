@@ -14,19 +14,6 @@
         </configuration>
       </plugin>
       <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.3.0</version>
-        <configuration>
-          <archive>
-            <manifestEntries>
-              <Premain-Class>com.dbmonitor.agent.DbMonitorAgent</Premain-Class>
-              <Can-Redefine-Classes>true</Can-Redefine-Classes>
-              <Can-Retransform-Classes>true</Can-Retransform-Classes>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.5.3</version>
         <executions>
