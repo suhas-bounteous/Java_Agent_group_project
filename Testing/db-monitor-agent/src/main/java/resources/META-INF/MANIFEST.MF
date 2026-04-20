@@ -1,0 +1,3 @@
+Premain-Class: com.dbmonitor.agent.DbMonitorAgent
+Can-Redefine-Classes: true
+Can-Retransform-Classes: true
