@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>DB Monitor — Live</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0f12;
+    --bg-elevated: #15181e;
+    --border: #23262d;
+    --border-soft: #1b1e24;
+    --text: #e8e8ea;
+    --text-muted: #8b929e;
+    --text-dim: #5a6170;
+    --accent: #f0a859;
+    --accent-soft: #f0a8591a;
+    --success: #7dc98a;
+    --danger: #f77272;
+    --warning: #e8c467;
+    --info: #7eb6e8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  body {
+    background-image:
+      radial-gradient(circle at 15% 0%, #1a1d24 0%, transparent 50%),
+      radial-gradient(circle at 85% 100%, #14171c 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  code, .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ---------- Header ---------- */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(13, 15, 18, 0.8);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .brand .logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    font-size: 14px;
+    color: var(--accent);
+  }
+  .brand .tagline {
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--success);
+  }
+  .live.offline { color: var(--danger); }
+  .live .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: pulse 1.8s ease-in-out infinite;
+  }
+  .live.offline .dot {
+    background: var(--danger);
+    box-shadow: 0 0 8px var(--danger);
+    animation: none;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+  }
+
+  .range-select {
+    display: flex;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+  }
+  .range-select button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: inherit;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+  }
+  .range-select button:hover { color: var(--text); }
+  .range-select button.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* ---------- Layout ---------- */
+  main {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px 28px 60px;
+  }
+
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 1100px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 600px)  { .kpis { grid-template-columns: repeat(2, 1fr); } }
+
+  .kpi {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 2px; height: 100%;
+    background: var(--accent);
+    opacity: 0.3;
+  }
+  .kpi .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .kpi .value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 28px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .kpi .sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+  .kpi.danger::before  { background: var(--danger);  }
+  .kpi.danger .value   { color: var(--danger);  }
+  .kpi.success::before { background: var(--success); }
+  .kpi.success .value  { color: var(--success); }
+  .kpi.warning::before { background: var(--warning); }
+  .kpi.warning .value  { color: var(--warning); }
+
+  /* ---------- Panels ---------- */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 1000px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .panel-header h2 {
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .panel-header .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .panel-body { padding: 18px; }
+  .panel-body.compact { padding: 0; }
+
+  /* ---------- Chart ---------- */
+  .chart-wrap {
+    padding: 18px;
+    height: 300px;
+    position: relative;
+  }
+
+  /* ---------- Tables ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  th {
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.015);
+  }
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num {
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  td.dim { color: var(--text-muted); }
+  td code {
+    color: var(--accent);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+  }
+  .tag.query    { background: #1e2f3d; color: var(--info); }
+  .tag.update   { background: #2d2815; color: var(--warning); }
+  .tag.batch    { background: #2a1e32; color: #c88fde; }
+  .tag.other    { background: #242830; color: var(--text-muted); }
+  .tag.commit   { background: #1f3024; color: var(--success); }
+  .tag.rollback { background: #2f1d1d; color: var(--danger); }
+  .tag.slow     { background: #3a1e1e; color: var(--danger); }
+
+  /* ---------- Empty / loading ---------- */
+  .empty {
+    padding: 32px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .ascii-box {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-dim);
+    white-space: pre;
+    font-size: 11px;
+    line-height: 1.3;
+    margin-bottom: 16px;
+  }
+
+  /* ---------- Error banner ---------- */
+  .error-banner {
+    background: rgba(247, 114, 114, 0.08);
+    border: 1px solid rgba(247, 114, 114, 0.3);
+    color: var(--danger);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .error-banner.visible { display: block; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 24px 28px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">◆ DB-MONITOR</div>
+    <div class="tagline">real-time database observability</div>
+  </div>
+  <div class="header-controls">
+    <div class="range-select" id="range-select">
+      <button data-minutes="5" class="active">5M</button>
+      <button data-minutes="15">15M</button>
+      <button data-minutes="60">1H</button>
+      <button data-minutes="240">4H</button>
+    </div>
+    <div class="live" id="live-indicator">
+      <span class="dot"></span>
+      <span id="live-text">LIVE</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="error-banner" id="error-banner"></div>
+
+  <div class="kpis" id="kpis">
+    <div class="kpi"><div class="label">Total Calls</div><div class="value" id="kpi-calls">—</div><div class="sub" id="kpi-calls-sub">waiting…</div></div>
+    <div class="kpi success"><div class="label">Active Connections</div><div class="value" id="kpi-conns">—</div><div class="sub">across all apps</div></div>
+    <div class="kpi"><div class="label">Avg Latency</div><div class="value" id="kpi-latency">—</div><div class="sub">milliseconds</div></div>
+    <div class="kpi danger"><div class="label">Error Rate</div><div class="value" id="kpi-error">—</div><div class="sub" id="kpi-error-sub">of total calls</div></div>
+    <div class="kpi warning"><div class="label">Slow Queries</div><div class="value" id="kpi-slow">—</div><div class="sub">over threshold</div></div>
+    <div class="kpi"><div class="label">Applications</div><div class="value" id="kpi-apps">—</div><div class="sub">reporting</div></div>
+  </div>
+
+  <div class="panel" style="margin-bottom: 16px;">
+    <div class="panel-header">
+      <h2>◇ THROUGHPUT &amp; LATENCY</h2>
+      <span class="meta" id="chart-range-label">last 5 minutes</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>◇ APPLICATIONS</h2>
+        <span class="meta" id="apps-count">0 active</span>
+      </div>
+      <div class="panel-body compact">
+        <div id="apps-body">
+          <div class="empty">waiting for first data…</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h2>◇ TOP SLOW QUERIES</h2>
+        <span class="meta">top 10 by duration</span>
+      </div>
+      <div class="panel-body compact">
+        <div id="slow-body">
+          <div class="empty">no slow queries yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h2>◇ RECENT QUERIES</h2>
+      <span class="meta">last 20</span>
+    </div>
+    <div class="panel-body compact">
+      <div id="recent-body">
+        <div class="empty">no queries captured yet</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>DB-MONITOR v0.1 · COLLECTOR <span id="backend-url"></span></span>
+  <span id="last-refresh">—</span>
+</footer>
+
+<script>
+// ---------- Configuration ----------
+const REFRESH_MS = 3000;
+// Same-origin: dashboard served from the collector itself.
+// If you open this file directly from disk, set this to "http://localhost:8081".
+const API_BASE = window.location.origin.startsWith('http')
+  ? window.location.origin
+  : 'http://localhost:8081';
+
+let selectedMinutes = 5;
+let chart = null;
+
+// ---------- DOM refs ----------
+const $ = (id) => document.getElementById(id);
+$('backend-url').textContent = API_BASE;
+
+// ---------- Helpers ----------
+const fmt = (n) => {
+  if (n == null) return '—';
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + 'k';
+  return String(n);
+};
+const fmtFixed = (n, d = 2) => (n == null || isNaN(n)) ? '—' : Number(n).toFixed(d);
+const fmtNs = (ns) => {
+  if (ns == null) return '—';
+  const ms = ns / 1_000_000;
+  if (ms >= 1000) return (ms / 1000).toFixed(2) + 's';
+  if (ms >= 1) return ms.toFixed(1) + 'ms';
+  return (ns / 1000).toFixed(0) + 'µs';
+};
+const fmtTime = (ts) => new Date(ts).toLocaleTimeString('en-GB');
+const rangeLabel = (m) => m === 60 ? 'last 1 hour' : m === 240 ? 'last 4 hours' : `last ${m} minutes`;
+
+async function fetchJson(path) {
+  const res = await fetch(API_BASE + path);
+  if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
+  return res.json();
+}
+
+function setOffline(msg) {
+  $('live-indicator').classList.add('offline');
+  $('live-text').textContent = 'OFFLINE';
+  const banner = $('error-banner');
+  banner.classList.add('visible');
+  banner.textContent = '⚠  ' + msg;
+}
+function setOnline() {
+  $('live-indicator').classList.remove('offline');
+  $('live-text').textContent = 'LIVE';
+  $('error-banner').classList.remove('visible');
+}
+
+// ---------- Renderers ----------
+function renderKpis(s) {
+  $('kpi-calls').textContent      = fmt(s.totalCalls);
+  $('kpi-calls-sub').textContent  = `${fmt(s.totalQueries)} queries · ${fmt(s.totalUpdates)} updates`;
+  $('kpi-conns').textContent      = fmt(s.activeConnections);
+  $('kpi-latency').textContent    = fmtFixed(s.avgLatencyMs, 1);
+  $('kpi-error').textContent      = fmtFixed(s.errorRatePct, 2) + '%';
+  $('kpi-error-sub').textContent  = `${fmt(s.totalErrors)} total errors`;
+  $('kpi-slow').textContent       = fmt(s.slowQueries);
+  $('kpi-apps').textContent       = fmt(s.appCount);
+}
+
+function renderApps(rows) {
+  $('apps-count').textContent = `${rows.length} active`;
+  const el = $('apps-body');
+  if (!rows.length) { el.innerHTML = '<div class="empty">no apps reporting yet</div>'; return; }
+
+  el.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Application</th>
+        <th class="num">Calls</th>
+        <th class="num">Avg ms</th>
+        <th class="num">Err %</th>
+        <th class="num">Conns</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => `
+          <tr>
+            <td><code>${escapeHtml(r.applicationName)}</code></td>
+            <td class="num">${fmt(r.totalCalls)}</td>
+            <td class="num">${fmtFixed(r.avgLatencyMs, 1)}</td>
+            <td class="num ${r.errorRatePct > 0 ? 'dim-danger' : ''}" ${r.errorRatePct > 0 ? 'style="color:var(--danger)"' : ''}>${fmtFixed(r.errorRatePct, 2)}</td>
+            <td class="num">${fmt(r.activeConnections)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderSlow(rows) {
+  const el = $('slow-body');
+  if (!rows.length) { el.innerHTML = '<div class="empty">no slow queries yet</div>'; return; }
+  el.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Query</th>
+        <th>App</th>
+        <th class="num">Duration</th>
+      </tr></thead>
+      <tbody>
+        ${rows.slice(0, 10).map(r => `
+          <tr>
+            <td><code title="${escapeHtml(r.query || '')}">${escapeHtml(truncate(r.query || '(no query)', 60))}</code></td>
+            <td class="dim">${escapeHtml(r.applicationName || '—')}</td>
+            <td class="num" style="color:var(--danger)">${fmtNs(r.durationNs)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderRecent(rows) {
+  const el = $('recent-body');
+  if (!rows.length) { el.innerHTML = '<div class="empty">no queries captured yet</div>'; return; }
+
+  el.innerHTML = `
+    <table>
+      <thead><tr>
+        <th style="width:90px">Time</th>
+        <th style="width:70px">Op</th>
+        <th>Query</th>
+        <th style="width:120px">App</th>
+        <th class="num" style="width:90px">Duration</th>
+        <th style="width:60px">Status</th>
+      </tr></thead>
+      <tbody>
+        ${rows.slice(0, 20).map(r => {
+          const opClass = (r.operationType || 'other').toLowerCase();
+          return `
+          <tr>
+            <td class="dim mono" style="font-size:11px">${fmtTime(r.timestamp)}</td>
+            <td><span class="tag ${opClass}">${escapeHtml(r.operationType || '?')}</span></td>
+            <td><code title="${escapeHtml(r.query || '')}">${escapeHtml(truncate(r.query || '(no query)', 70))}</code></td>
+            <td class="dim">${escapeHtml(r.applicationName || '—')}</td>
+            <td class="num ${r.slow ? 'slow' : ''}" ${r.slow ? 'style="color:var(--danger)"' : ''}>${fmtNs(r.durationNs)}</td>
+            <td>${r.success ? '<span class="tag commit">OK</span>' : '<span class="tag rollback">FAIL</span>'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderChart(points) {
+  // aggregate by timestamp across apps
+  const byTs = new Map();
+  for (const p of points) {
+    const bucket = byTs.get(p.t) || { t: p.t, calls: 0, latencyWeighted: 0, latencyWeight: 0 };
+    bucket.calls += p.calls;
+    if (p.calls > 0) {
+      bucket.latencyWeighted += p.avgLatencyMs * p.calls;
+      bucket.latencyWeight   += p.calls;
+    }
+    byTs.set(p.t, bucket);
+  }
+  const sorted = [...byTs.values()].sort((a, b) => a.t - b.t);
+  const labels  = sorted.map(p => new Date(p.t));
+  const calls   = sorted.map(p => p.calls);
+  const latency = sorted.map(p => p.latencyWeight > 0 ? p.latencyWeighted / p.latencyWeight : 0);
+
+  if (chart) {
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = calls;
+    chart.data.datasets[1].data = latency;
+    chart.update('none');
+    return;
+  }
+
+  const ctx = $('chart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: 'Calls / sec',
+          data: calls,
+          backgroundColor: 'rgba(240, 168, 89, 0.35)',
+          borderColor: 'rgba(240, 168, 89, 0.9)',
+          borderWidth: 1,
+          borderRadius: 2,
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: 'Avg latency (ms)',
+          data: latency,
+          borderColor: 'rgba(126, 182, 232, 0.9)',
+          backgroundColor: 'rgba(126, 182, 232, 0.1)',
+          borderWidth: 2,
+          tension: 0.3,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          yAxisID: 'y1',
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          align: 'end',
+          labels: {
+            color: '#8b929e',
+            font: { family: 'IBM Plex Mono', size: 11 },
+            boxWidth: 10,
+            boxHeight: 10,
+          },
+        },
+        tooltip: {
+          backgroundColor: '#15181e',
+          borderColor: '#23262d',
+          borderWidth: 1,
+          titleColor: '#e8e8ea',
+          bodyColor: '#e8e8ea',
+          titleFont: { family: 'IBM Plex Mono', size: 11 },
+          bodyFont: { family: 'IBM Plex Mono', size: 12 },
+          padding: 10,
+        },
+      },
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'minute', displayFormats: { minute: 'HH:mm', second: 'HH:mm:ss' } },
+          ticks: { color: '#5a6170', font: { family: 'IBM Plex Mono', size: 10 } },
+          grid: { color: 'rgba(35, 38, 45, 0.5)' },
+        },
+        y: {
+          position: 'left',
+          ticks: { color: '#8b929e', font: { family: 'IBM Plex Mono', size: 10 } },
+          grid: { color: 'rgba(35, 38, 45, 0.4)' },
+          title: { display: true, text: 'calls', color: '#5a6170', font: { family: 'IBM Plex Mono', size: 10 } },
+        },
+        y1: {
+          position: 'right',
+          ticks: { color: '#7eb6e8', font: { family: 'IBM Plex Mono', size: 10 } },
+          grid: { drawOnChartArea: false },
+          title: { display: true, text: 'ms', color: '#7eb6e8', font: { family: 'IBM Plex Mono', size: 10 } },
+        },
+      },
+    },
+  });
+}
+
+// ---------- Utility ----------
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+// ---------- Refresh loop ----------
+async function refresh() {
+  try {
+    const [summary, apps, ts, slow, recent] = await Promise.all([
+      fetchJson(`/api/summary?minutes=${selectedMinutes}`),
+      fetchJson(`/api/apps?minutes=${selectedMinutes}`),
+      fetchJson(`/api/timeseries?minutes=${selectedMinutes}`),
+      fetchJson(`/api/slow-queries?limit=10`),
+      fetchJson(`/api/recent-queries?limit=20`),
+    ]);
+
+    renderKpis(summary);
+    renderApps(apps);
+    renderSlow(slow);
+    renderRecent(recent);
+    renderChart(ts);
+
+    $('chart-range-label').textContent = rangeLabel(selectedMinutes);
+    $('last-refresh').textContent = 'updated ' + new Date().toLocaleTimeString('en-GB');
+    setOnline();
+  } catch (err) {
+    setOffline(`cannot reach collector at ${API_BASE} — ${err.message}`);
+  }
+}
+
+// ---------- Wiring ----------
+document.querySelectorAll('#range-select button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#range-select button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedMinutes = parseInt(btn.dataset.minutes, 10);
+    refresh();
+  });
+});
+
+refresh();
+setInterval(refresh, REFRESH_MS);
+</script>
+</body>
+</html>
