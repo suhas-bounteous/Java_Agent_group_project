@@ -1,0 +1,27 @@
+<!-- src/app/shared/components/stat-card/stat-card.component.html -->
+<div class="stat-card" [class]="'variant-' + variant">
+  <div class="card-glow"></div>
+  <div class="card-header">
+    <span class="card-icon material-icons">{{ icon }}</span>
+    <span class="card-title">{{ title }}</span>
+  </div>
+
+  <div class="card-body">
+    <ng-container *ngIf="!loading; else loadingTpl">
+      <div class="card-value">{{ value }}</div>
+      <div class="card-meta">
+        <span class="subtitle">{{ subtitle }}</span>
+        <span *ngIf="trendValue" class="trend" [class]="'trend-' + trend">
+          <span class="material-icons trend-icon">
+            {{ trend === 'up' ? 'trending_up' : trend === 'down' ? 'trending_down' : 'trending_flat' }}
+          </span>
+          {{ trendValue }}
+        </span>
+      </div>
+    </ng-container>
+    <ng-template #loadingTpl>
+      <div class="skeleton-value"></div>
+      <div class="skeleton-text"></div>
+    </ng-template>
+  </div>
+</div>

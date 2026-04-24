@@ -1,0 +1,210 @@
+// src/app/features/metrics/metrics.component.scss
+
+// ── Error Banner ──────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 82, 82, 0.08);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+
+  > .material-icons { font-size: 26px; color: #ff5252; flex-shrink: 0; }
+
+  .error-text {
+    display: flex; flex-direction: column; gap: 3px;
+    strong { color: #ff5252; font-size: 13px; }
+    span   { color: var(--text-secondary); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  }
+}
+
+// ── Loading ───────────────────────────────────────────────────────────────────
+.loading-overlay {
+  display: flex; justify-content: center; align-items: center; min-height: 300px;
+
+  .spinner-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    color: var(--text-muted); font-size: 13px;
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--card-border);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+// ── No Data ───────────────────────────────────────────────────────────────────
+.no-data-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 80px 24px; text-align: center;
+
+  .material-icons { font-size: 56px; color: var(--text-muted); opacity: 0.4; }
+  h3 { font-size: 18px; color: var(--text-secondary); font-weight: 600; }
+  p {
+    font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 460px;
+    code {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      padding: 2px 7px; border-radius: 4px; color: var(--accent-color);
+    }
+  }
+}
+
+// ── Chart Empty ───────────────────────────────────────────────────────────────
+.chart-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; height: 200px;
+  color: var(--text-muted); font-size: 12px;
+  .material-icons { font-size: 32px; opacity: 0.3; }
+}
+
+// ── Page layout ───────────────────────────────────────────────────────────────
+.metrics-page {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+.page-header {
+  .page-title    { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+  .page-subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+}
+
+// ── KPI Row ───────────────────────────────────────────────────────────────────
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 12px;
+}
+
+.kpi-box {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s;
+  &:hover { transform: translateY(-2px); }
+
+  .kpi-label {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-muted);
+  }
+
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px; font-weight: 700; line-height: 1;
+    color: var(--text-primary);
+    &.cyan   { color: #00d4ff; }
+    &.purple { color: #9c6dff; }
+    &.red    { color: #ff5252; }
+    &.green  { color: #00e676; }
+    &.orange { color: #ffb300; }
+  }
+}
+
+// ── Charts Grid ───────────────────────────────────────────────────────────────
+.metrics-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+  .span-full { grid-column: 1 / -1; }
+}
+
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 20px;
+
+  .chart-header {
+    margin-bottom: 16px;
+    h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0 0 3px; }
+    .chart-sub { font-size: 11px; color: var(--text-muted); }
+  }
+
+  .chart-body {
+    height: 200px;
+    position: relative;
+    &.tall { height: 250px; }
+  }
+}
+
+// ── Metrics Table ─────────────────────────────────────────────────────────────
+.metrics-table-wrap {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  overflow: hidden;
+
+  .table-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--card-border);
+
+    h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0; }
+    .table-sub { font-size: 11px; color: var(--text-muted); }
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--surface-1);
+  }
+
+  th {
+    text-align: left;
+    padding: 10px 16px;
+    color: var(--text-muted);
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--card-border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 9px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-secondary);
+    white-space: nowrap;
+
+    &.mono   { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+    &.cyan   { color: #00d4ff; }
+    &.purple { color: #9c6dff; }
+    &.red    { color: #ff5252; }
+    &.green  { color: #00e676; }
+    &.orange { color: #ffb300; }
+  }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  tr:last-child td { border-bottom: none; }
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes spin   { to { transform: rotate(360deg); } }

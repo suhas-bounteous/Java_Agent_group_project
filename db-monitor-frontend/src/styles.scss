@@ -1,0 +1,138 @@
+/* src/styles.scss — Global design system for DB Monitor */
+
+/* ── Google Fonts (also linked in index.html) ─────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+/* ── CSS Variables ────────────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-primary:        #080c18;
+  --surface-1:         #0d1224;
+  --card-bg:           #111827;
+  --card-border:       rgba(255, 255, 255, 0.07);
+  --hover-bg:          rgba(255, 255, 255, 0.04);
+
+  /* Brand accent */
+  --accent-color:      #00d4ff;
+  --accent-subtle:     rgba(0, 212, 255, 0.10);
+  --accent-glow:       rgba(0, 212, 255, 0.20);
+
+  /* Typography */
+  --text-primary:      #e2e8f0;
+  --text-secondary:    #94a3b8;
+  --text-muted:        #4b5e73;
+
+  /* Status colors */
+  --color-success:     #00e676;
+  --color-warning:     #ffb300;
+  --color-danger:      #ff5252;
+  --color-info:        #448aff;
+  --color-purple:      #9c6dff;
+}
+
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+html, body {
+  height: 100%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbars ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Typography helpers ───────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+/* ── Form elements ────────────────────────────────────────────────────────── */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+/* ── Material Icons alignment fix ────────────────────────────────────────── */
+.material-icons {
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* ── Utility classes ──────────────────────────────────────────────────────── */
+.text-primary   { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-muted     { color: var(--text-muted) !important; }
+.text-accent    { color: var(--accent-color) !important; }
+.text-success   { color: var(--color-success) !important; }
+.text-warning   { color: var(--color-warning) !important; }
+.text-danger    { color: var(--color-danger) !important; }
+
+.mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Subtle grid background for depth ────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Page-level wrapper to sit above grid ─────────────────────────────────── */
+app-root {
+  position: relative;
+  z-index: 1;
+  display: block;
+}
+
+/* ── Chart.js canvas smoothing ───────────────────────────────────────────── */
+canvas {
+  image-rendering: crisp-edges;
+}
+
+/* ── ng2-charts overrides ─────────────────────────────────────────────────── */
+.chart-container {
+  position: relative !important;
+}

@@ -1,0 +1,171 @@
+<!-- src/app/features/events/events.component.html -->
+<div class="events-page">
+
+  <!-- Error Banner -->
+  <div class="error-banner" *ngIf="backendError">
+    <span class="material-icons">wifi_off</span>
+    <div class="error-text">
+      <strong>Backend unreachable</strong>
+      <span>{{ backendError }}</span>
+    </div>
+    <span class="error-hint">Ensure Spring Boot is running on port 8081 with CORS configured</span>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Live Events Stream</h1>
+      <p class="page-subtitle">Real-time database operations intercepted by the Java agent</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-ghost" (click)="clearFilters()">
+        <span class="material-icons">filter_alt_off</span> Clear Filters
+      </button>
+      <button class="btn-pause" [class.paused]="paused" (click)="togglePause()">
+        <span class="material-icons">{{ paused ? 'play_arrow' : 'pause' }}</span>
+        {{ paused ? 'Resume' : 'Pause' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-group">
+      <label>Application</label>
+      <select [(ngModel)]="selectedApp" (change)="applyFilters()">
+        <option value="">All Apps</option>
+        <option *ngFor="let app of applicationNames" [value]="app">{{ app }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Operation</label>
+      <select [(ngModel)]="selectedOp" (change)="applyFilters()">
+        <option value="">All Operations</option>
+        <option *ngFor="let op of operationTypes" [value]="op">{{ op }}</option>
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>Status</label>
+      <select [(ngModel)]="successFilter" (change)="applyFilters()">
+        <option value="">All</option>
+        <option value="success">Success only</option>
+        <option value="error">Errors only</option>
+      </select>
+    </div>
+
+    <div class="filter-group search-group">
+      <label>Search</label>
+      <div class="search-input-wrap">
+        <span class="material-icons">search</span>
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"
+               placeholder="Query text, app name, operation…" />
+      </div>
+    </div>
+
+    <div class="filter-count">
+      <span class="count-num">{{ filteredEvents.length }}</span>
+      <span class="count-label">events</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" *ngIf="loading && !backendError">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <p>Loading events…</p>
+    </div>
+  </div>
+
+  <!-- No data yet -->
+  <div class="no-data-state" *ngIf="!loading && !backendError && events.length === 0">
+    <span class="material-icons">bolt</span>
+    <h3>No events recorded yet</h3>
+    <p>Events appear here as the Java agent intercepts database operations.<br>
+       Start your instrumented application with <code>-javaagent</code> to begin.</p>
+  </div>
+
+  <!-- Events Table -->
+  <div class="events-table-wrap" *ngIf="!loading && events.length > 0">
+    <table class="events-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Application</th>
+          <th>Host / JVM</th>
+          <th>DB Type</th>
+          <th>Operation</th>
+          <th>Duration</th>
+          <th>Status</th>
+          <th>Query</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let event of filteredEvents; trackBy: trackByIndex"
+            [class.row-error]="!event.success"
+            [class.row-slow]="event.slow">
+
+          <td class="mono time-col">{{ event.timestamp | date:'HH:mm:ss.SSS' }}</td>
+
+          <td class="app-col">
+            <span class="app-pill">{{ event.applicationName || '—' }}</span>
+          </td>
+
+          <td>
+            <span class="mono host-text">{{ event.hostName || '—' }}</span>
+            <span class="jvm-id">{{ event.jvmId || '' }}</span>
+          </td>
+
+          <td>
+            <span class="db-badge" *ngIf="event.databaseType">{{ event.databaseType }}</span>
+            <span *ngIf="!event.databaseType" class="text-muted">—</span>
+          </td>
+
+          <td>
+            <div class="op-cell">
+              <span class="material-icons op-icon-sm">{{ getOpIcon(event.operationType) }}</span>
+              <span class="op-text" [class]="'op-' + event.operationType?.toLowerCase()?.replace('_','-')">
+                {{ event.operationType }}
+              </span>
+            </div>
+          </td>
+
+          <td>
+            <span class="duration-val mono" [class.slow-val]="event.slow">
+              {{ formatDuration(event.durationNs) }}
+            </span>
+            <span *ngIf="event.slow" class="slow-tag">SLOW</span>
+          </td>
+
+          <td>
+            <span class="status-dot-cell" [class.ok]="event.success" [class.err]="!event.success">
+              <span class="material-icons">{{ event.success ? 'check_circle' : 'cancel' }}</span>
+              {{ event.success ? 'OK' : 'ERR' }}
+            </span>
+          </td>
+
+          <td class="query-col">
+            <span class="query-text mono"
+                  [title]="event.query || ''"
+                  *ngIf="event.query; else noQuery">
+              {{ event.query }}
+            </span>
+            <ng-template #noQuery>
+              <span class="text-muted">—</span>
+            </ng-template>
+          </td>
+
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Active filters return zero matches -->
+    <div class="no-events" *ngIf="filteredEvents.length === 0 && events.length > 0">
+      <span class="material-icons">filter_alt_off</span>
+      <p>No events match your current filters</p>
+      <button class="btn-ghost" (click)="clearFilters()">Clear filters</button>
+    </div>
+  </div>
+
+</div>

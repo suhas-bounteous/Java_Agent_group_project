@@ -1,0 +1,52 @@
+<!-- src/app/layout/header/header.component.html -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-toggle" (click)="toggleSidebar.emit()">
+      <span class="material-icons">{{ sidebarCollapsed ? 'menu_open' : 'menu' }}</span>
+    </button>
+    <div class="brand">
+      <span class="brand-icon material-icons">monitoring</span>
+      <div class="brand-text">
+        <span class="brand-name">DB Monitor</span>
+        <span class="brand-tagline">Java Agent Dashboard</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar-center">
+    <div class="search-bar">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" placeholder="Search applications, queries…" />
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <!-- Live clock -->
+    <div class="clock">
+      <span class="material-icons clock-icon">schedule</span>
+      <span class="clock-time">{{ currentTime | date:'HH:mm:ss' }}</span>
+    </div>
+
+    <!-- Backend status -->
+    <div class="status-badge" [class.connected]="connectionStatus?.backendConnected" [class.disconnected]="!connectionStatus?.backendConnected">
+      <span class="status-dot"></span>
+      <span class="status-text">{{ connectionStatus?.backendConnected ? 'Live' : 'Offline' }}</span>
+    </div>
+
+    <!-- Alert bell -->
+    <button class="icon-btn alert-btn" routerLink="/alerts">
+      <span class="material-icons">notifications</span>
+      <span *ngIf="activeAlertCount > 0" class="alert-badge">{{ activeAlertCount }}</span>
+    </button>
+
+    <!-- Settings -->
+    <button class="icon-btn">
+      <span class="material-icons">settings</span>
+    </button>
+
+    <!-- Avatar -->
+    <div class="avatar">
+      <span class="material-icons">account_circle</span>
+    </div>
+  </div>
+</header>

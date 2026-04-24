@@ -1,0 +1,206 @@
+// src/app/features/applications/applications.component.scss
+
+// ── Error Banner ──────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(255,82,82,0.08); border: 1px solid rgba(255,82,82,0.3);
+  border-radius: 12px; padding: 16px 20px;
+  > .material-icons { font-size: 26px; color: #ff5252; flex-shrink: 0; }
+  .error-text {
+    display: flex; flex-direction: column; gap: 3px;
+    strong { color: #ff5252; font-size: 13px; }
+    span   { color: var(--text-secondary); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  }
+}
+
+// ── Loading ───────────────────────────────────────────────────────────────────
+.loading-overlay {
+  display: flex; justify-content: center; align-items: center; min-height: 300px;
+  .spinner-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    color: var(--text-muted); font-size: 13px;
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--card-border); border-top-color: var(--accent-color);
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+// ── No Data ───────────────────────────────────────────────────────────────────
+.no-data-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 80px 24px; text-align: center;
+  .material-icons { font-size: 56px; color: var(--text-muted); opacity: 0.4; }
+  h3 { font-size: 18px; color: var(--text-secondary); font-weight: 600; }
+  p {
+    font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 460px;
+    code {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      padding: 2px 7px; border-radius: 4px; color: var(--accent-color);
+    }
+  }
+}
+
+// ── Chart Empty ───────────────────────────────────────────────────────────────
+.chart-empty {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px; height: 200px;
+  color: var(--text-muted); font-size: 12px;
+  .material-icons { font-size: 32px; opacity: 0.3; }
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+.apps-page {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  .page-title    { font-size: 22px; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+  .page-subtitle { font-size: 13px; color: var(--text-muted); margin: 0; }
+
+  .app-count-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    padding: 8px 14px; border-radius: 10px;
+    font-size: 13px; color: var(--text-secondary);
+    .material-icons { font-size: 18px; color: var(--accent-color); }
+  }
+}
+
+// ── App Cards ─────────────────────────────────────────────────────────────────
+.apps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.app-card {
+  background: var(--card-bg); border: 1px solid var(--card-border);
+  border-radius: 14px; overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  &:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+
+  .app-card-accent { height: 3px; width: 100%; }
+  .app-card-body   { padding: 18px; }
+
+  .app-card-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    .app-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      .material-icons { font-size: 20px; }
+    }
+    .app-meta {
+      display: flex; flex-direction: column; gap: 2px; overflow: hidden;
+      .app-name  { font-size: 14px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .app-share { font-size: 11px; color: var(--text-muted); }
+    }
+  }
+
+  .app-stats {
+    display: flex; gap: 24px; margin-bottom: 14px;
+    .app-stat {
+      display: flex; flex-direction: column; gap: 2px;
+      .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; line-height: 1; }
+      .stat-lbl { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    }
+  }
+
+  .app-bar-wrap {
+    height: 4px; background: var(--card-border); border-radius: 2px; overflow: hidden;
+    .app-bar { height: 100%; border-radius: 2px; transition: width 0.8s ease; }
+  }
+}
+
+// ── Charts Row ────────────────────────────────────────────────────────────────
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 16px;
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.chart-card {
+  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 20px;
+  .chart-header {
+    margin-bottom: 16px;
+    h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0 0 3px; }
+    .chart-sub { font-size: 11px; color: var(--text-muted); }
+  }
+  .chart-body { height: 240px; position: relative; }
+}
+
+// ── Op Type Progress Bars ─────────────────────────────────────────────────────
+.op-type-grid {
+  display: flex; flex-direction: column; gap: 14px; padding-top: 4px;
+
+  .op-type-row {
+    .op-info {
+      display: flex; justify-content: space-between; margin-bottom: 5px;
+      .op-name  { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+      .op-count { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent-color); }
+    }
+    .op-progress-wrap {
+      height: 5px; background: var(--card-border); border-radius: 3px; overflow: hidden;
+      .op-progress {
+        height: 100%; border-radius: 3px; transition: width 0.8s ease;
+        background: var(--accent-color);
+        &.op-progress-query, &.op-progress-update, &.op-progress-batch { background: #00d4ff; }
+        &.op-progress-commit           { background: #00e676; }
+        &.op-progress-rollback         { background: #ff5252; }
+        &.op-progress-connection-open,
+        &.op-progress-connection-close { background: #ffb300; }
+      }
+    }
+  }
+}
+
+// ── App Table ─────────────────────────────────────────────────────────────────
+.apps-table-wrap {
+  background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; overflow: hidden;
+  .table-header {
+    display: flex; align-items: baseline; gap: 12px; padding: 16px 20px;
+    border-bottom: 1px solid var(--card-border);
+    h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0; }
+    .table-sub { font-size: 11px; color: var(--text-muted); }
+  }
+}
+
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+  th {
+    text-align: left; padding: 10px 16px;
+    color: var(--text-muted); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--card-border); white-space: nowrap;
+  }
+  td {
+    padding: 10px 16px; color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle;
+    &.rank { color: var(--text-muted); font-weight: 700; }
+    &.mono { font-family: 'JetBrains Mono', monospace; }
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+}
+
+.app-name-cell {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600; color: var(--text-primary);
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+}
+
+.mini-bar-wrap {
+  width: 120px; height: 5px; background: var(--card-border); border-radius: 3px; overflow: hidden;
+  .mini-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes spin   { to { transform: rotate(360deg); } }

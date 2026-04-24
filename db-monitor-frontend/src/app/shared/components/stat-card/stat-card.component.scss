@@ -1,0 +1,117 @@
+// src/app/shared/components/stat-card/stat-card.component.scss
+.stat-card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 24px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .card-glow {
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    opacity: 0.08;
+    filter: blur(40px);
+    background: var(--accent-color, #00d4ff);
+    pointer-events: none;
+  }
+
+  &.variant-success .card-glow { background: #00e676; }
+  &.variant-warning .card-glow { background: #ffb300; }
+  &.variant-danger  .card-glow { background: #ff5252; }
+  &.variant-info    .card-glow { background: #448aff; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+
+    .card-icon {
+      font-size: 20px;
+      color: var(--accent-color, #00d4ff);
+      opacity: 0.85;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+  }
+
+  .card-body {
+    .card-value {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 6px;
+
+      .subtitle {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .trend {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 12px;
+        font-weight: 600;
+
+        .trend-icon { font-size: 14px; }
+
+        &.trend-up   { color: #00e676; }
+        &.trend-down { color: #ff5252; }
+        &.trend-neutral { color: var(--text-muted); }
+      }
+    }
+  }
+
+  // Skeleton loading states
+  .skeleton-value {
+    height: 32px;
+    width: 100px;
+    background: linear-gradient(90deg, var(--card-border) 25%, rgba(255,255,255,0.05) 50%, var(--card-border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 6px;
+    margin-bottom: 10px;
+  }
+
+  .skeleton-text {
+    height: 12px;
+    width: 140px;
+    background: linear-gradient(90deg, var(--card-border) 25%, rgba(255,255,255,0.05) 50%, var(--card-border) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

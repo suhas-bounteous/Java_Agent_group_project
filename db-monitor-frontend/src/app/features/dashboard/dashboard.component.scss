@@ -1,0 +1,417 @@
+// src/app/features/dashboard/dashboard.component.scss
+
+// ── Error Banner ──────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 82, 82, 0.08);
+  border: 1px solid rgba(255, 82, 82, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 28px 28px 0;
+
+  > .material-icons { font-size: 26px; color: #ff5252; flex-shrink: 0; }
+
+  .error-text {
+    display: flex; flex-direction: column; gap: 3px; flex: 1;
+    strong { color: #ff5252; font-size: 13px; }
+    span   { color: var(--text-secondary); font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  }
+
+  .error-hint { font-size: 11px; color: var(--text-muted); font-style: italic; }
+}
+
+// ── Loading Overlay ───────────────────────────────────────────────────────────
+.loading-overlay {
+  display: flex; justify-content: center; align-items: center; min-height: 300px;
+
+  .spinner-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    color: var(--text-muted); font-size: 13px;
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--card-border);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+// ── No Data State ─────────────────────────────────────────────────────────────
+.no-data-state {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 80px 24px; text-align: center;
+
+  .material-icons { font-size: 56px; color: var(--text-muted); opacity: 0.4; }
+  h3 { font-size: 18px; color: var(--text-secondary); font-weight: 600; }
+  p {
+    font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 460px;
+    code {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      padding: 2px 7px; border-radius: 4px; color: var(--accent-color);
+    }
+  }
+}
+
+// ── Chart Empty Placeholder ───────────────────────────────────────────────────
+.chart-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; height: 160px; color: var(--text-muted); font-size: 12px;
+  .material-icons { font-size: 32px; opacity: 0.3; }
+}
+
+.dashboard-page {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: fadeIn 0.4s ease;
+}
+
+// ── Page Header ──────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  .page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 12px;
+
+    .material-icons { font-size: 16px; animation: spin 3s linear infinite; }
+    .refresh-label { color: var(--accent-color); font-weight: 500; }
+  }
+}
+
+// ── Stat Cards Grid ───────────────────────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+// ── Chart Cards ───────────────────────────────────────────────────────────────
+.charts-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1200px) {
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 { grid-column: span 2; }
+}
+
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .chart-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 4px;
+    }
+
+    .chart-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .chart-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: #00e676;
+      background: rgba(0, 230, 118, 0.12);
+      padding: 3px 8px;
+      border-radius: 20px;
+      animation: pulse 2s infinite;
+    }
+  }
+
+  .chart-body {
+    flex: 1;
+    min-height: 180px;
+    position: relative;
+
+    &.donut-body { min-height: 200px; }
+    &.bar-body { min-height: 180px; }
+  }
+}
+
+// ── Transaction Health ────────────────────────────────────────────────────────
+.transaction-health {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+
+  .txn-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .txn-icon {
+      font-size: 20px;
+      &.success { color: #00e676; }
+      &.danger  { color: #ff5252; }
+    }
+
+    .txn-info {
+      display: flex;
+      flex-direction: column;
+      width: 90px;
+      flex-shrink: 0;
+
+      .txn-label { font-size: 11px; color: var(--text-muted); }
+      .txn-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+    }
+
+    .txn-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--card-border);
+      border-radius: 3px;
+      overflow: hidden;
+
+      .txn-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.6s ease;
+
+        &.success { background: linear-gradient(90deg, #00e676, #00c853); }
+        &.danger  { background: linear-gradient(90deg, #ff5252, #ff1744); }
+      }
+    }
+  }
+
+  .txn-rate {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-top: 4px;
+    border-top: 1px solid var(--card-border);
+
+    strong {
+      color: var(--text-primary);
+      &.danger-text { color: #ff5252; }
+    }
+  }
+}
+
+// ── Tables ────────────────────────────────────────────────────────────────────
+.tables-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 900px) { grid-template-columns: 1fr; }
+}
+
+.table-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  overflow: hidden;
+
+  .table-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--card-border);
+
+    h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin: 0; }
+
+    .view-all {
+      font-size: 12px;
+      color: var(--accent-color);
+      text-decoration: none;
+
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+
+  th {
+    text-align: left;
+    padding: 10px 16px;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: rgba(255,255,255,0.02);
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  td {
+    padding: 10px 16px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .app-name { color: var(--text-primary); font-weight: 500; }
+
+  .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .time-cell { color: var(--text-muted); }
+}
+
+.op-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-secondary);
+
+  .op-icon { font-size: 12px; }
+
+  &.op-query, &.op-update  { background: rgba(0,212,255,0.1); color: #00d4ff; }
+  &.op-commit              { background: rgba(0,230,118,0.1); color: #00e676; }
+  &.op-rollback            { background: rgba(255,82,82,0.1);  color: #ff5252; }
+  &.op-connection-open,
+  &.op-connection-close    { background: rgba(255,179,0,0.1);  color: #ffb300; }
+}
+
+.status-chip {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+
+  &.success { background: rgba(0,230,118,0.15); color: #00e676; }
+  &.error   { background: rgba(255,82,82,0.15);  color: #ff5252; }
+}
+
+// ── Slow Queries ──────────────────────────────────────────────────────────────
+.slow-query-list {
+  display: flex;
+  flex-direction: column;
+
+  .slow-query-item {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    transition: background 0.15s;
+
+    &:hover { background: rgba(255,255,255,0.02); }
+    &:last-child { border-bottom: none; }
+
+    .sq-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+
+      .sq-app { font-size: 11px; font-weight: 600; color: var(--accent-color); }
+      .sq-duration {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: #ffb300;
+        &.critical { color: #ff5252; }
+      }
+    }
+
+    .sq-query {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    .sq-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: 13px;
+
+  .material-icons { font-size: 32px; color: #00e676; opacity: 0.6; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}

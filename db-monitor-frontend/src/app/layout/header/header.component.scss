@@ -1,0 +1,215 @@
+// src/app/layout/header/header.component.scss
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  z-index: 1000;
+  backdrop-filter: blur(12px);
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+
+    .menu-toggle {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover {
+        background: var(--card-border);
+        color: var(--text-primary);
+      }
+
+      .material-icons { font-size: 22px; }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .brand-icon {
+        font-size: 26px;
+        color: var(--accent-color);
+        filter: drop-shadow(0 0 8px var(--accent-color));
+      }
+
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+
+        .brand-name {
+          font-size: 15px;
+          font-weight: 700;
+          color: var(--text-primary);
+          letter-spacing: 0.02em;
+        }
+
+        .brand-tagline {
+          font-size: 10px;
+          color: var(--text-muted);
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+      }
+    }
+  }
+
+  .topbar-center {
+    flex: 1;
+    max-width: 480px;
+    margin: 0 auto;
+
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0 14px;
+      height: 38px;
+      transition: border-color 0.15s;
+
+      &:focus-within {
+        border-color: var(--accent-color);
+      }
+
+      .search-icon {
+        font-size: 18px;
+        color: var(--text-muted);
+      }
+
+      input {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--text-primary);
+        font-size: 13px;
+
+        &::placeholder { color: var(--text-muted); }
+      }
+    }
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    margin-left: auto;
+
+    .clock {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+
+      .clock-icon { font-size: 15px; }
+      .clock-time {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: var(--text-primary);
+      }
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+
+      .status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+      }
+
+      &.connected {
+        background: rgba(0, 230, 118, 0.12);
+        color: #00e676;
+        .status-dot {
+          background: #00e676;
+          box-shadow: 0 0 6px #00e676;
+          animation: pulse 1.5s infinite;
+        }
+      }
+
+      &.disconnected {
+        background: rgba(255, 82, 82, 0.12);
+        color: #ff5252;
+        .status-dot { background: #ff5252; }
+      }
+    }
+
+    .icon-btn {
+      position: relative;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 7px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      transition: background 0.15s, color 0.15s;
+
+      &:hover {
+        background: var(--card-border);
+        color: var(--text-primary);
+      }
+
+      .material-icons { font-size: 20px; }
+
+      .alert-badge {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        background: #ff5252;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+      }
+    }
+
+    .avatar {
+      color: var(--accent-color);
+      display: flex;
+      cursor: pointer;
+      .material-icons { font-size: 32px; }
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
