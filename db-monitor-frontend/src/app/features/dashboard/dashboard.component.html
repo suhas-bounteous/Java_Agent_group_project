@@ -1,0 +1,321 @@
+<!-- src/app/features/dashboard/dashboard.component.html -->
+<div class="dashboard-page">
+
+  <!-- Backend Error Banner -->
+  <div class="error-banner" *ngIf="backendError">
+    <span class="material-icons">wifi_off</span>
+    <div class="error-text">
+      <strong>Backend unreachable</strong>
+      <span>{{ backendError }}</span>
+    </div>
+    <span class="error-hint">Ensure Spring Boot is running on port 8081 with CORS configured</span>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" *ngIf="loading && !backendError">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <p>Connecting to backend…</p>
+    </div>
+  </div>
+
+  <!-- No data yet -->
+  <div class="no-data-state" *ngIf="!loading && !backendError && !hasData">
+    <span class="material-icons">hourglass_empty</span>
+    <h3>No metrics data yet</h3>
+    <p>Backend is reachable but no data has been stored.<br>
+       Start your instrumented Java application with the <code>-javaagent</code> flag.</p>
+  </div>
+
+  <!-- Main content -->
+  <ng-container *ngIf="!loading || hasData">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Overview Dashboard</h1>
+        <p class="page-subtitle">Real-time database activity across all monitored JVM applications</p>
+      </div>
+      <div class="header-actions">
+        <span class="refresh-info material-icons">sync</span>
+        <span class="refresh-label">Auto-refreshing every 5s</span>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="stats-grid">
+      <app-stat-card
+        title="Total Operations"
+        [value]="totalOpsDisplay"
+        subtitle="Queries + Updates this session"
+        icon="query_stats"
+        variant="default"
+        [loading]="!summary">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Active Connections"
+        [value]="summary ? summary.activeConnections : '—'"
+        subtitle="Live DB connections right now"
+        icon="cable"
+        variant="info"
+        [loading]="!summary">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Avg Latency"
+        [value]="avgLatencyDisplay"
+        subtitle="Per query execution time"
+        icon="speed"
+        [variant]="avgLatencyDanger ? 'danger' : 'success'"
+        [loading]="!summary">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Error Rate"
+        [value]="errorRateDisplay"
+        subtitle="Failed DB operations"
+        icon="error_outline"
+        [variant]="errorRateDanger ? 'danger' : 'success'"
+        [loading]="!summary">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Slow Queries"
+        [value]="summary ? summary.slowQueries : '—'"
+        subtitle="Above configured threshold"
+        icon="hourglass_top"
+        [variant]="summary && summary.slowQueries > 10 ? 'warning' : 'default'"
+        [loading]="!summary">
+      </app-stat-card>
+
+      <app-stat-card
+        title="Transactions"
+        [value]="transactionsDisplay"
+        [subtitle]="transactionSubtitle"
+        icon="swap_horiz"
+        variant="default"
+        [loading]="!summary">
+      </app-stat-card>
+    </div>
+
+    <!-- Charts Row 1: Latency + Operations Mix -->
+    <div class="charts-row">
+      <div class="chart-card span-2">
+        <div class="chart-card-header">
+          <div>
+            <h3>Query Latency Trend</h3>
+            <span class="chart-sub">Average milliseconds per reporting interval</span>
+          </div>
+          <span class="chart-badge">LIVE</span>
+        </div>
+        <div class="chart-body" *ngIf="hasLatencyData; else noLatencyTpl">
+          <canvas baseChart [data]="latencyChartData" [options]="latencyChartOptions" type="line"></canvas>
+        </div>
+        <ng-template #noLatencyTpl>
+          <div class="chart-empty">
+            <span class="material-icons">show_chart</span>
+            <span>Waiting for metrics history…</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h3>Operation Mix</h3>
+            <span class="chart-sub">Distribution by type</span>
+          </div>
+        </div>
+        <div class="chart-body donut-body" *ngIf="hasOpsData; else noOpsTpl">
+          <canvas baseChart [data]="operationsChartData" [options]="doughnutOptions" type="doughnut"></canvas>
+        </div>
+        <ng-template #noOpsTpl>
+          <div class="chart-empty">
+            <span class="material-icons">donut_large</span>
+            <span>No operation data yet</span>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Charts Row 2: App Bar + Connections -->
+    <div class="charts-row">
+      <div class="chart-card span-2">
+        <div class="chart-card-header">
+          <div>
+            <h3>Top Applications by DB Load</h3>
+            <span class="chart-sub">Total operations per monitored service</span>
+          </div>
+        </div>
+        <div class="chart-body bar-body" *ngIf="hasAppData; else noAppTpl">
+          <canvas baseChart [data]="appChartData" [options]="barChartOptions" type="bar"></canvas>
+        </div>
+        <ng-template #noAppTpl>
+          <div class="chart-empty">
+            <span class="material-icons">bar_chart</span>
+            <span>No application data yet</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h3>Active Connections</h3>
+            <span class="chart-sub">Over time</span>
+          </div>
+        </div>
+        <div class="chart-body" *ngIf="hasConnectionData; else noConnTpl">
+          <canvas baseChart [data]="connectionsChartData" [options]="latencyChartOptions" type="line"></canvas>
+        </div>
+        <ng-template #noConnTpl>
+          <div class="chart-empty">
+            <span class="material-icons">cable</span>
+            <span>No connection history yet</span>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Charts Row 3: Error Rate + Transaction Health -->
+    <div class="charts-row">
+      <div class="chart-card span-2">
+        <div class="chart-card-header">
+          <div>
+            <h3>Error Rate Trend</h3>
+            <span class="chart-sub">% of failed operations per interval</span>
+          </div>
+        </div>
+        <div class="chart-body" *ngIf="hasErrorData; else noErrTpl">
+          <canvas baseChart [data]="errorChartData" [options]="errorChartOptions" type="line"></canvas>
+        </div>
+        <ng-template #noErrTpl>
+          <div class="chart-empty">
+            <span class="material-icons">error_outline</span>
+            <span>No error data yet</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h3>Transaction Health</h3>
+            <span class="chart-sub">Commits vs Rollbacks</span>
+          </div>
+        </div>
+        <div class="transaction-health" *ngIf="summary; else noTxnTpl">
+          <div class="txn-row">
+            <span class="txn-icon success material-icons">check_circle</span>
+            <div class="txn-info">
+              <span class="txn-label">Commits</span>
+              <span class="txn-value">{{ formatNumber(summary.commits) }}</span>
+            </div>
+            <div class="txn-bar-wrap">
+              <div class="txn-bar success" [style.width.%]="commitPct"></div>
+            </div>
+          </div>
+          <div class="txn-row">
+            <span class="txn-icon danger material-icons">undo</span>
+            <div class="txn-info">
+              <span class="txn-label">Rollbacks</span>
+              <span class="txn-value">{{ formatNumber(summary.rollbacks) }}</span>
+            </div>
+            <div class="txn-bar-wrap">
+              <div class="txn-bar danger" [style.width.%]="rollbackPct"></div>
+            </div>
+          </div>
+          <div class="txn-rate">
+            Rollback Rate:
+            <strong [class.danger-text]="rollbackRateDanger">{{ rollbackRateDisplay }}</strong>
+          </div>
+        </div>
+        <ng-template #noTxnTpl>
+          <div class="chart-empty">
+            <span class="material-icons">swap_horiz</span>
+            <span>No transaction data yet</span>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Bottom Tables -->
+    <div class="tables-row">
+
+      <!-- Recent Events -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <h3>Recent Events</h3>
+          <a class="view-all" routerLink="/events">View all →</a>
+        </div>
+        <div *ngIf="recentEvents.length > 0; else noEventsTpl">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>App</th>
+                <th>Operation</th>
+                <th>Duration</th>
+                <th>Status</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let event of recentEvents">
+                <td class="app-name">{{ event.applicationName }}</td>
+                <td>
+                  <div class="op-badge" [ngClass]="getOpClass(event.operationType)">
+                    <span class="material-icons op-icon">{{ getOpIcon(event.operationType) }}</span>
+                    {{ event.operationType }}
+                  </div>
+                </td>
+                <td class="mono">{{ formatDuration(event.durationNs) }}</td>
+                <td>
+                  <span class="status-chip" [class.success]="event.success" [class.error]="!event.success">
+                    {{ event.success ? 'OK' : 'ERR' }}
+                  </span>
+                </td>
+                <td class="mono time-cell">{{ event.timestamp | date:'HH:mm:ss' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noEventsTpl>
+          <div class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>No events recorded yet</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Slow Queries -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <h3>⚠ Slow Queries</h3>
+          <a class="view-all" routerLink="/events">View all →</a>
+        </div>
+        <div class="slow-query-list" *ngIf="slowQueries.length > 0; else noSlowTpl">
+          <div *ngFor="let sq of slowQueries" class="slow-query-item">
+            <div class="sq-header">
+              <span class="sq-app">{{ sq.applicationName }}</span>
+              <span class="sq-duration">{{ formatDuration(sq.durationNs) }}</span>
+            </div>
+            <div class="sq-query">{{ sq.query || '(no query text)' }}</div>
+            <div class="sq-meta">
+              <span>{{ sq.databaseType }}</span>
+              <span>{{ sq.timestamp | date:'HH:mm:ss' }}</span>
+            </div>
+          </div>
+        </div>
+        <ng-template #noSlowTpl>
+          <div class="empty-state">
+            <span class="material-icons">check_circle</span>
+            No slow queries detected
+          </div>
+        </ng-template>
+      </div>
+
+    </div>
+
+  </ng-container>
+</div>

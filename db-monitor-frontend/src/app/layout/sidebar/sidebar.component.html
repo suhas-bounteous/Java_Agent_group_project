@@ -1,0 +1,37 @@
+<!-- src/app/layout/sidebar/sidebar.component.html -->
+<nav class="sidebar" [class.collapsed]="collapsed">
+  <ul class="nav-list">
+    <li *ngFor="let item of navItems">
+      <a
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="active"
+        [title]="collapsed ? item.label : ''"
+      >
+        <span class="nav-icon material-icons">{{ item.icon }}</span>
+        <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+        <span *ngIf="item.badge && !collapsed" class="nav-badge">{{ item.badge }}</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="sidebar-bottom">
+    <div class="divider"></div>
+    <ul class="nav-list">
+      <li *ngFor="let item of bottomItems">
+        <a class="nav-item" [routerLink]="item.route" routerLinkActive="active" [title]="collapsed ? item.label : ''">
+          <span class="nav-icon material-icons">{{ item.icon }}</span>
+          <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="agent-status" *ngIf="!collapsed">
+      <div class="agent-dot"></div>
+      <div class="agent-info">
+        <span class="agent-label">Agent Active</span>
+        <span class="agent-version">db-monitor v1.0.0</span>
+      </div>
+    </div>
+  </div>
+</nav>

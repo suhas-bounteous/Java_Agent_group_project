@@ -1,0 +1,185 @@
+<!-- src/app/features/metrics/metrics.component.html -->
+<div class="metrics-page">
+
+  <!-- Error Banner -->
+  <div class="error-banner" *ngIf="backendError">
+    <span class="material-icons">wifi_off</span>
+    <div class="error-text">
+      <strong>Backend unreachable</strong>
+      <span>{{ backendError }}</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" *ngIf="loading && !backendError">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <p>Loading metrics…</p>
+    </div>
+  </div>
+
+  <!-- No data state -->
+  <div class="no-data-state" *ngIf="!loading && !backendError && metricsHistory.length === 0">
+    <span class="material-icons">bar_chart</span>
+    <h3>No metrics history yet</h3>
+    <p>Metrics are written to the database when the Java agent reports them.<br>
+       Start your instrumented application with <code>-javaagent</code> to begin.</p>
+  </div>
+
+  <ng-container *ngIf="!loading && metricsHistory.length > 0">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Metrics History</h1>
+        <p class="page-subtitle">Aggregated database performance metrics over time ({{ metricsHistory.length }} snapshots)</p>
+      </div>
+    </div>
+
+    <!-- FIX: KPI row now uses /metrics/summary (cumulative totals), not a single snapshot row -->
+    <div class="kpi-row" *ngIf="summary">
+      <div class="kpi-box">
+        <span class="kpi-label">Total Queries</span>
+        <span class="kpi-value cyan">{{ formatNumber(summary.totalQueries) }}</span>
+      </div>
+      <div class="kpi-box">
+        <span class="kpi-label">Total Errors</span>
+        <span class="kpi-value" [class.red]="summary.totalErrors > 0" [class.green]="summary.totalErrors === 0">
+          {{ summary.totalErrors }}
+        </span>
+      </div>
+      <div class="kpi-box">
+        <span class="kpi-label">Avg Latency</span>
+        <span class="kpi-value cyan">{{ summary.avgLatencyMs.toFixed(2) }} ms</span>
+      </div>
+      <div class="kpi-box">
+        <span class="kpi-label">Active Connections</span>
+        <span class="kpi-value green">{{ summary.activeConnections }}</span>
+      </div>
+      <div class="kpi-box">
+        <span class="kpi-label">Slow Queries</span>
+        <span class="kpi-value" [class.orange]="summary.slowQueries > 0" [class.green]="summary.slowQueries === 0">
+          {{ summary.slowQueries }}
+        </span>
+      </div>
+      <div class="kpi-box">
+        <span class="kpi-label">Commits</span>
+        <span class="kpi-value green">{{ summary.commits }}</span>
+      </div>
+      <div class="kpi-box">
+        <span class="kpi-label">Rollbacks</span>
+        <span class="kpi-value" [class.red]="summary.rollbacks > 0" [class.green]="summary.rollbacks === 0">
+          {{ summary.rollbacks }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="metrics-charts-grid">
+
+      <!-- Throughput (full width) -->
+      <div class="chart-card span-full">
+        <div class="chart-header">
+          <h3>Query Throughput</h3>
+          <span class="chart-sub">Queries + Updates per reporting interval</span>
+        </div>
+        <div class="chart-body tall" *ngIf="throughputChartData.labels && throughputChartData.labels.length > 0; else noThroughput">
+          <canvas baseChart [data]="throughputChartData" [options]="stackedBarOptions" type="bar"></canvas>
+        </div>
+        <ng-template #noThroughput>
+          <div class="chart-empty">
+            <span class="material-icons">bar_chart</span><span>No throughput data</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Latency -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Average Query Latency</h3>
+          <span class="chart-sub">Milliseconds per operation</span>
+        </div>
+        <div class="chart-body" *ngIf="latencyChartData.labels && latencyChartData.labels.length > 0; else noLatency">
+          <canvas baseChart [data]="latencyChartData" [options]="lineOptions" type="line"></canvas>
+        </div>
+        <ng-template #noLatency>
+          <div class="chart-empty">
+            <span class="material-icons">speed</span><span>No latency data</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Connections -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Active Connections Over Time</h3>
+          <span class="chart-sub">Connection pool usage trend</span>
+        </div>
+        <div class="chart-body" *ngIf="connectionsChartData.labels && connectionsChartData.labels.length > 0; else noConn">
+          <canvas baseChart [data]="connectionsChartData" [options]="lineOptions" type="line"></canvas>
+        </div>
+        <ng-template #noConn>
+          <div class="chart-empty">
+            <span class="material-icons">cable</span><span>No connection data</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Errors + Slow Queries dual axis (full width) -->
+      <div class="chart-card span-full">
+        <div class="chart-header">
+          <h3>Errors &amp; Slow Queries</h3>
+          <span class="chart-sub">Error count (left axis) vs Slow queries (right axis)</span>
+        </div>
+        <div class="chart-body tall" *ngIf="errorSlowChartData.labels && errorSlowChartData.labels.length > 0; else noErr">
+          <canvas baseChart [data]="errorSlowChartData" [options]="dualAxisOptions" type="line"></canvas>
+        </div>
+        <ng-template #noErr>
+          <div class="chart-empty">
+            <span class="material-icons">error_outline</span><span>No error data</span>
+          </div>
+        </ng-template>
+      </div>
+
+    </div>
+
+    <!-- Raw metrics log table — shows per-interval deltas -->
+    <div class="metrics-table-wrap">
+      <div class="table-header">
+        <h3>Raw Metrics Log</h3>
+        <span class="table-sub">Last {{ metricsHistory.length }} snapshots — most recent first (values are per-interval deltas)</span>
+      </div>
+      <div class="table-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Queries</th>
+              <th>Updates</th>
+              <th>Errors</th>
+              <th>Avg Latency</th>
+              <th>Active Conn.</th>
+              <th>Slow Queries</th>
+              <th>Commits</th>
+              <th>Rollbacks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of recentMetricsRows">
+              <td class="mono">{{ m.timestamp | date:'HH:mm:ss' }}</td>
+              <td class="mono cyan">{{ m.totalQueries }}</td>
+              <td class="mono purple">{{ m.totalUpdates }}</td>
+              <td class="mono" [class.red]="m.totalErrors > 0">{{ m.totalErrors }}</td>
+              <td class="mono">{{ calcAvgLatency(m) }}</td>
+              <td class="mono green">{{ m.activeConnections }}</td>
+              <td class="mono" [class.orange]="m.slowQueries > 0">{{ m.slowQueries }}</td>
+              <td class="mono green">{{ m.commits }}</td>
+              <td class="mono" [class.red]="m.rollbacks > 0">{{ m.rollbacks }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+
+</div>

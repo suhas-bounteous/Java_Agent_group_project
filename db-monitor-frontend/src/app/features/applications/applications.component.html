@@ -1,0 +1,163 @@
+<!-- src/app/features/applications/applications.component.html -->
+<div class="apps-page">
+
+  <!-- Error Banner -->
+  <div class="error-banner" *ngIf="backendError">
+    <span class="material-icons">wifi_off</span>
+    <div class="error-text">
+      <strong>Backend unreachable</strong>
+      <span>{{ backendError }}</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" *ngIf="loading && !backendError">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <p>Loading application data…</p>
+    </div>
+  </div>
+
+  <!-- No data -->
+  <div class="no-data-state" *ngIf="!loading && !backendError && !hasAppData">
+    <span class="material-icons">apps</span>
+    <h3>No application data yet</h3>
+    <p>Application names are captured from events sent by the Java agent.<br>
+       Start your instrumented application with <code>-javaagent</code> to begin.</p>
+  </div>
+
+  <ng-container *ngIf="!loading && hasAppData">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Applications</h1>
+        <p class="page-subtitle">Per-service database usage breakdown</p>
+      </div>
+      <div class="app-count-badge">
+        <span class="material-icons">apps</span>
+        {{ appRows.length }} service{{ appRows.length !== 1 ? 's' : '' }} monitored
+      </div>
+    </div>
+
+    <!-- App Cards -->
+    <div class="apps-grid">
+      <div class="app-card" *ngFor="let app of appRows; let i = index">
+        <div class="app-card-accent" [style.background]="getColorForIndex(i)"></div>
+        <div class="app-card-body">
+          <div class="app-card-header">
+            <div class="app-icon"
+                 [style.background]="getColorForIndex(i) + '22'"
+                 [style.color]="getColorForIndex(i)">
+              <span class="material-icons">dns</span>
+            </div>
+            <div class="app-meta">
+              <span class="app-name">{{ app.name }}</span>
+              <span class="app-share">{{ app.pct }}% of total load</span>
+            </div>
+          </div>
+
+          <div class="app-stats">
+            <div class="app-stat">
+              <span class="stat-val" [style.color]="getColorForIndex(i)">{{ formatNumber(app.operations) }}</span>
+              <span class="stat-lbl">Operations</span>
+            </div>
+          </div>
+
+          <div class="app-bar-wrap">
+            <div class="app-bar" [style.width.%]="app.pct" [style.background]="getColorForIndex(i)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+
+      <!-- Pie chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Load Distribution</h3>
+          <span class="chart-sub">Operations by service</span>
+        </div>
+        <div class="chart-body" *ngIf="pieChartData.labels && pieChartData.labels.length > 0; else noPie">
+          <canvas baseChart [data]="pieChartData" [options]="pieOptions" type="pie"></canvas>
+        </div>
+        <ng-template #noPie>
+          <div class="chart-empty">
+            <span class="material-icons">pie_chart</span><span>No data</span>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Operation type breakdown -->
+      <div class="chart-card span-2">
+        <div class="chart-header">
+          <h3>Operations by Type</h3>
+          <span class="chart-sub">Breakdown across all services (from DB events)</span>
+        </div>
+        <div class="op-type-grid" *ngIf="hasOpData; else noOpType">
+          <div class="op-type-row" *ngFor="let item of (stats!.byOperationType | keyvalue)">
+            <div class="op-info">
+              <span class="op-name">{{ item.key }}</span>
+              <span class="op-count mono">{{ formatNumber(+item.value) }}</span>
+            </div>
+            <div class="op-progress-wrap">
+              <div class="op-progress"
+                   [style.width.%]="stats!.totalEvents > 0 ? (+item.value / stats!.totalEvents) * 100 : 0"
+                   [class]="'op-progress-' + item.key.toLowerCase().replace('_','-')">
+              </div>
+            </div>
+          </div>
+        </div>
+        <ng-template #noOpType>
+          <div class="chart-empty">
+            <span class="material-icons">stacked_bar_chart</span><span>No operation data</span>
+          </div>
+        </ng-template>
+      </div>
+
+    </div>
+
+    <!-- App Summary Table -->
+    <div class="apps-table-wrap">
+      <div class="table-header">
+        <h3>Application Summary</h3>
+        <span class="table-sub">Sorted by DB load (highest first)</span>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Service Name</th>
+            <th>Total Operations</th>
+            <th>% of Load</th>
+            <th>Load Bar</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let app of appRows; let i = index">
+            <td class="rank">{{ i + 1 }}</td>
+            <td>
+              <div class="app-name-cell">
+                <span class="dot" [style.background]="getColorForIndex(i)"></span>
+                {{ app.name }}
+              </div>
+            </td>
+            <td class="mono" [style.color]="getColorForIndex(i)">{{ formatNumber(app.operations) }}</td>
+            <td class="mono" [style.color]="getColorForIndex(i)">{{ app.pct }}%</td>
+            <td>
+              <div class="mini-bar-wrap">
+                <div class="mini-bar"
+                     [style.width.%]="app.pct"
+                     [style.background]="getColorForIndex(i)">
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </ng-container>
+
+</div>

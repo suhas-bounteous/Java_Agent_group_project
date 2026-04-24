@@ -1,0 +1,180 @@
+<!-- src/app/features/alerts/alerts.component.html -->
+<div class="alerts-page">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Alerts &amp; Notifications</h1>
+      <p class="page-subtitle">Threshold-based monitoring alerts across all JVM applications</p>
+    </div>
+    <button class="btn-clear" (click)="clearAll()">
+      <span class="material-icons">delete_sweep</span> Clear All
+    </button>
+  </div>
+
+  <!-- Summary chips -->
+  <div class="alert-summary">
+    <div class="summary-chip critical">
+      <span class="material-icons">cancel</span>
+      <span>{{ criticalCount }} Critical</span>
+    </div>
+    <div class="summary-chip warning">
+      <span class="material-icons">warning_amber</span>
+      <span>{{ warningCount }} Warning</span>
+    </div>
+    <div class="summary-chip info">
+      <span class="material-icons">info_outline</span>
+      <span>{{ infoCount }} Info</span>
+    </div>
+    <div class="summary-chip total">
+      <span class="material-icons">notifications</span>
+      <span>{{ allAlerts.length }} Total</span>
+    </div>
+  </div>
+
+  <!-- Filter row -->
+  <div class="filter-row">
+    <div class="filter-group">
+      <label>Severity</label>
+      <select [(ngModel)]="severityFilter" (change)="applyFilter()">
+        <option value="">All</option>
+        <option value="critical">Critical</option>
+        <option value="warning">Warning</option>
+        <option value="info">Info</option>
+      </select>
+    </div>
+    <label class="toggle-label">
+      <input type="checkbox" [(ngModel)]="showAcknowledged" (change)="applyFilter()">
+      Show Acknowledged
+    </label>
+  </div>
+
+  <!-- Alert list -->
+  <div class="alert-list">
+    <div *ngIf="filteredAlerts.length === 0" class="empty-alerts">
+      <span class="material-icons">check_circle</span>
+      <p>No active alerts — system is healthy</p>
+      <span class="empty-sub">Alerts appear here when thresholds are exceeded</span>
+    </div>
+
+    <div *ngFor="let alert of filteredAlerts"
+         class="alert-item"
+         [class]="alert.severity"
+         [class.acknowledged]="alert.acknowledged">
+
+      <div class="alert-icon-wrap">
+        <span class="material-icons alert-icon">{{ getAlertIcon(alert.type) }}</span>
+      </div>
+
+      <div class="alert-content">
+        <div class="alert-type-row">
+          <span class="alert-type">{{ alert.type.replace('_', ' ') }}</span>
+          <span class="severity-badge" [class]="alert.severity">{{ alert.severity }}</span>
+        </div>
+        <div class="alert-message">{{ alert.message }}</div>
+        <div class="alert-meta">
+          <span class="meta-item">
+            <span class="material-icons">schedule</span>
+            {{ alert.timestamp | date:'MMM d, HH:mm:ss' }}
+          </span>
+          <span class="meta-item" *ngIf="alert.applicationName">
+            <span class="material-icons">dns</span>
+            {{ alert.applicationName }}
+          </span>
+          <span class="meta-item" *ngIf="alert.value !== undefined">
+            <span class="material-icons">data_usage</span>
+            Value: {{ alert.value | number:'1.0-2' }} / Threshold: {{ alert.threshold | number:'1.0-2' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="alert-actions">
+        <button class="ack-btn" *ngIf="!alert.acknowledged" (click)="acknowledge(alert.id)">
+          <span class="material-icons">check</span>
+          Acknowledge
+        </button>
+        <span class="acked-chip" *ngIf="alert.acknowledged">
+          <span class="material-icons">check_circle</span>
+          Resolved
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Threshold Configuration -->
+  <div class="threshold-card">
+    <div class="threshold-header">
+      <h3>
+        <span class="material-icons">tune</span>
+        Alert Thresholds Configuration
+      </h3>
+      <span class="threshold-sub">Customize when alerts are triggered</span>
+    </div>
+
+    <div class="threshold-grid">
+      <div class="threshold-row">
+        <div class="threshold-info">
+          <span class="threshold-icon material-icons">speed</span>
+          <div>
+            <span class="threshold-label">High Latency Threshold</span>
+            <span class="threshold-desc">Alert when avg query latency exceeds this value</span>
+          </div>
+        </div>
+        <div class="threshold-input-wrap">
+          <input type="number" [(ngModel)]="thresholds.highLatencyMs" min="1">
+          <span class="threshold-unit">ms</span>
+        </div>
+      </div>
+
+      <div class="threshold-row">
+        <div class="threshold-info">
+          <span class="threshold-icon material-icons red">error_outline</span>
+          <div>
+            <span class="threshold-label">High Error Rate Threshold</span>
+            <span class="threshold-desc">Alert when error rate exceeds this percentage</span>
+          </div>
+        </div>
+        <div class="threshold-input-wrap">
+          <input type="number" [(ngModel)]="thresholds.highErrorRatePct" min="0" max="100">
+          <span class="threshold-unit">%</span>
+        </div>
+      </div>
+
+      <div class="threshold-row">
+        <div class="threshold-info">
+          <span class="threshold-icon material-icons orange">cable</span>
+          <div>
+            <span class="threshold-label">Excess Connections</span>
+            <span class="threshold-desc">Alert when active connections exceed this count</span>
+          </div>
+        </div>
+        <div class="threshold-input-wrap">
+          <input type="number" [(ngModel)]="thresholds.excessConnections" min="1">
+          <span class="threshold-unit">conn</span>
+        </div>
+      </div>
+
+      <div class="threshold-row">
+        <div class="threshold-info">
+          <span class="threshold-icon material-icons purple">undo</span>
+          <div>
+            <span class="threshold-label">High Rollback Rate</span>
+            <span class="threshold-desc">Alert when transaction rollback rate exceeds this</span>
+          </div>
+        </div>
+        <div class="threshold-input-wrap">
+          <input type="number" [(ngModel)]="thresholds.highRollbackRatePct" min="0" max="100">
+          <span class="threshold-unit">%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="threshold-actions">
+      <button class="btn-save" (click)="saveThresholds()">
+        <span class="material-icons">save</span>
+        Save Thresholds
+      </button>
+      <span class="save-hint">Changes take effect on the next metrics poll</span>
+    </div>
+  </div>
+
+</div>
