@@ -54,15 +54,6 @@
       </app-stat-card>
 
       <app-stat-card
-        title="Active Connections"
-        [value]="summary ? summary.activeConnections : '—'"
-        subtitle="Live DB connections right now"
-        icon="cable"
-        variant="info"
-        [loading]="!summary">
-      </app-stat-card>
-
-      <app-stat-card
         title="Avg Latency"
         [value]="avgLatencyDisplay"
         subtitle="Per query execution time"
@@ -89,14 +80,6 @@
         [loading]="!summary">
       </app-stat-card>
 
-      <app-stat-card
-        title="Transactions"
-        [value]="transactionsDisplay"
-        [subtitle]="transactionSubtitle"
-        icon="swap_horiz"
-        variant="default"
-        [loading]="!summary">
-      </app-stat-card>
     </div>
 
     <!-- Charts Row 1: Latency + Operations Mix -->
@@ -139,9 +122,9 @@
       </div>
     </div>
 
-    <!-- Charts Row 2: App Bar + Connections -->
+    <!-- Charts Row 2: App Bar -->
     <div class="charts-row">
-      <div class="chart-card span-2">
+      <div class="chart-card span-3">
         <div class="chart-card-header">
           <div>
             <h3>Top Applications by DB Load</h3>
@@ -158,29 +141,11 @@
           </div>
         </ng-template>
       </div>
-
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <div>
-            <h3>Active Connections</h3>
-            <span class="chart-sub">Over time</span>
-          </div>
-        </div>
-        <div class="chart-body" *ngIf="hasConnectionData; else noConnTpl">
-          <canvas baseChart [data]="connectionsChartData" [options]="latencyChartOptions" type="line"></canvas>
-        </div>
-        <ng-template #noConnTpl>
-          <div class="chart-empty">
-            <span class="material-icons">cable</span>
-            <span>No connection history yet</span>
-          </div>
-        </ng-template>
-      </div>
     </div>
 
-    <!-- Charts Row 3: Error Rate + Transaction Health -->
+    <!-- Charts Row 3: Error Rate -->
     <div class="charts-row">
-      <div class="chart-card span-2">
+      <div class="chart-card span-3">
         <div class="chart-card-header">
           <div>
             <h3>Error Rate Trend</h3>
@@ -194,47 +159,6 @@
           <div class="chart-empty">
             <span class="material-icons">error_outline</span>
             <span>No error data yet</span>
-          </div>
-        </ng-template>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <div>
-            <h3>Transaction Health</h3>
-            <span class="chart-sub">Commits vs Rollbacks</span>
-          </div>
-        </div>
-        <div class="transaction-health" *ngIf="summary; else noTxnTpl">
-          <div class="txn-row">
-            <span class="txn-icon success material-icons">check_circle</span>
-            <div class="txn-info">
-              <span class="txn-label">Commits</span>
-              <span class="txn-value">{{ formatNumber(summary.commits) }}</span>
-            </div>
-            <div class="txn-bar-wrap">
-              <div class="txn-bar success" [style.width.%]="commitPct"></div>
-            </div>
-          </div>
-          <div class="txn-row">
-            <span class="txn-icon danger material-icons">undo</span>
-            <div class="txn-info">
-              <span class="txn-label">Rollbacks</span>
-              <span class="txn-value">{{ formatNumber(summary.rollbacks) }}</span>
-            </div>
-            <div class="txn-bar-wrap">
-              <div class="txn-bar danger" [style.width.%]="rollbackPct"></div>
-            </div>
-          </div>
-          <div class="txn-rate">
-            Rollback Rate:
-            <strong [class.danger-text]="rollbackRateDanger">{{ rollbackRateDisplay }}</strong>
-          </div>
-        </div>
-        <ng-template #noTxnTpl>
-          <div class="chart-empty">
-            <span class="material-icons">swap_horiz</span>
-            <span>No transaction data yet</span>
           </div>
         </ng-template>
       </div>

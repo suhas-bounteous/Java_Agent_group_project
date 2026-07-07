@@ -29,6 +29,6 @@ export class SidebarComponent {
   ];
 
   bottomItems: NavItem[] = [
-    { label: 'Settings', icon: 'settings', route: '/settings' },
+    // { label: 'Settings', icon: 'settings', route: '/settings' },
   ];
 }

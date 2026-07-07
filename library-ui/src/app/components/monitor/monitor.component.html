@@ -1,0 +1,70 @@
+<div class="page-header">
+  <h1><mat-icon style="vertical-align:middle;margin-right:8px">monitor_heart</mat-icon>DB Monitor</h1>
+  <p>Trigger test queries to monitor database behaviour</p>
+</div>
+
+<div class="card-grid">
+  <!-- Slow Query Card -->
+  <mat-card class="monitor-card slow-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>hourglass_empty</mat-icon> Slow Query Test</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="description">
+        Executes <code>pg_sleep(5)</code> directly in PostgreSQL. The database itself holds the connection open for 5 seconds — visible in DB monitoring tools as a long-running query.
+      </p>
+      <div class="endpoint-badge">GET /books/monitor/slow-query</div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="runSlowQuery()" [disabled]="slowRunning">
+        <mat-spinner *ngIf="slowRunning" diameter="18" style="display:inline-block;margin-right:6px"></mat-spinner>
+        <mat-icon *ngIf="!slowRunning">play_arrow</mat-icon>
+        {{ slowRunning ? 'Running (5s)...' : 'Run Slow Query' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- Error Query Card -->
+  <mat-card class="monitor-card error-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>error_outline</mat-icon> Error Query Test</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="description">
+        Queries a table that doesn't exist (<code>non_existent_table_xyz</code>). PostgreSQL throws a <strong>relation does not exist</strong> error — logged in DB error logs and returned as HTTP 500.
+      </p>
+      <div class="endpoint-badge error">GET /books/monitor/error-test</div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-raised-button color="warn" (click)="runErrorQuery()" [disabled]="errorRunning">
+        <mat-spinner *ngIf="errorRunning" diameter="18" style="display:inline-block;margin-right:6px"></mat-spinner>
+        <mat-icon *ngIf="!errorRunning">flash_on</mat-icon>
+        {{ errorRunning ? 'Running...' : 'Trigger DB Error' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<!-- Log Console -->
+<mat-card class="log-card" style="margin-top:24px">
+  <mat-card-header>
+    <mat-card-title><mat-icon>terminal</mat-icon> Activity Log</mat-card-title>
+    <span style="flex:1"></span>
+    <button mat-icon-button (click)="clearLogs()" matTooltip="Clear logs" [disabled]="logs.length === 0">
+      <mat-icon>delete_sweep</mat-icon>
+    </button>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="log-console">
+      <div *ngIf="logs.length === 0" class="log-empty">No activity yet. Run a query above.</div>
+      <div *ngFor="let log of logs" class="log-entry" [ngClass]="'log-' + log.type">
+        <span class="log-time">{{ log.time | date:'HH:mm:ss' }}</span>
+        <mat-icon class="log-icon">
+          {{ log.type === 'error' ? 'cancel' : log.type === 'slow' ? 'timer' : log.type === 'success' ? 'check_circle' : 'info' }}
+        </mat-icon>
+        <span class="log-msg">{{ log.message }}</span>
+        <span class="log-duration" *ngIf="log.duration">{{ log.duration }}ms</span>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

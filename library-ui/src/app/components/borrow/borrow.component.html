@@ -1,0 +1,155 @@
+<div class="page-header">
+  <h1><mat-icon style="vertical-align:middle;margin-right:8px">swap_horiz</mat-icon>Borrow / Return</h1>
+  <p>Issue or return books for library members</p>
+</div>
+
+<div class="card-grid">
+  <!-- Borrow Form -->
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>arrow_forward</mat-icon> Borrow a Book</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="borrowForm" (ngSubmit)="borrow()" #borrowFormDirective="ngForm">
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Select Book</mat-label>
+          <mat-select formControlName="bookId">
+            <mat-option *ngFor="let b of books" [value]="b.id">
+              {{ b.bookName }} — {{ b.author }}
+            </mat-option>
+          </mat-select>
+          <mat-icon matSuffix>menu_book</mat-icon>
+          <mat-error *ngIf="borrowForm.get('bookId')?.hasError('required')">Select a book</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Select Member</mat-label>
+          <mat-select formControlName="memberId">
+            <mat-option *ngFor="let m of members" [value]="m.id">
+              {{ m.name }} ({{ m.email }})
+            </mat-option>
+          </mat-select>
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="borrowForm.get('memberId')?.hasError('required')">Select a member</mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+            <mat-icon>arrow_forward</mat-icon> {{ submitting ? 'Processing...' : 'Borrow Book' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Return Form -->
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>arrow_back</mat-icon> Return a Book</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="returnForm" (ngSubmit)="returnBook()" #returnFormDirective="ngForm">
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Borrow Record ID</mat-label>
+          <input matInput formControlName="borrowId" type="number" placeholder="e.g. 1">
+          <mat-icon matSuffix>receipt</mat-icon>
+          <mat-hint>Enter the ID from the borrow record</mat-hint>
+          <mat-error *ngIf="returnForm.get('borrowId')?.hasError('required')">Borrow ID is required</mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="accent" type="submit" [disabled]="returning">
+            <mat-icon>arrow_back</mat-icon> {{ returning ? 'Processing...' : 'Return Book' }}
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Last Transaction -->
+<mat-card class="result-card" *ngIf="lastRecord" style="margin-top:24px">
+  <mat-card-header>
+    <mat-card-title><mat-icon>receipt_long</mat-icon> Last Transaction</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="result-grid">
+      <div class="result-item">
+        <span class="label">Record ID</span>
+        <span class="value">#{{ lastRecord.id }}</span>
+      </div>
+      <div class="result-item">
+        <span class="label">Book</span>
+        <span class="value">{{ lastRecord.book.bookName }}</span>
+      </div>
+      <div class="result-item">
+        <span class="label">Member</span>
+        <span class="value">{{ lastRecord.member.name }}</span>
+      </div>
+      <div class="result-item">
+        <span class="label">Borrowed At</span>
+        <span class="value">{{ lastRecord.borrowTime | date:'medium' }}</span>
+      </div>
+      <div class="result-item">
+        <span class="label">Status</span>
+        <span class="status-chip" [ngClass]="lastRecord.returnTime ? 'chip-success' : 'chip-warning'">
+          {{ lastRecord.returnTime ? 'Returned' : 'Borrowed' }}
+        </span>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<!-- All Borrow Records -->
+<mat-card class="list-card" style="margin-top:24px">
+  <mat-card-header>
+    <mat-card-title><mat-icon>list</mat-icon> All Borrow Records ({{ borrowRecords.length }})</mat-card-title>
+    <span style="flex:1"></span>
+    <button mat-icon-button (click)="loadRecords()" matTooltip="Refresh"><mat-icon>refresh</mat-icon></button>
+  </mat-card-header>
+  <mat-card-content>
+    <div *ngIf="loadingRecords" class="spinner-overlay"><mat-spinner diameter="40"></mat-spinner></div>
+
+    <div *ngIf="!loadingRecords && borrowRecords.length === 0" class="empty-state">
+      <mat-icon>inbox</mat-icon>
+      <p>No borrow records found.</p>
+    </div>
+
+    <table mat-table [dataSource]="borrowRecords" class="data-table" *ngIf="!loadingRecords && borrowRecords.length > 0">
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef>#</th>
+        <td mat-cell *matCellDef="let r">{{ r.id }}</td>
+      </ng-container>
+      <ng-container matColumnDef="book">
+        <th mat-header-cell *matHeaderCellDef>Book</th>
+        <td mat-cell *matCellDef="let r"><strong>{{ r.book?.bookName }}</strong></td>
+      </ng-container>
+      <ng-container matColumnDef="member">
+        <th mat-header-cell *matHeaderCellDef>Member</th>
+        <td mat-cell *matCellDef="let r">{{ r.member?.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="borrowTime">
+        <th mat-header-cell *matHeaderCellDef>Borrowed At</th>
+        <td mat-cell *matCellDef="let r">{{ r.borrowTime | date:'medium' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="returnTime">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let r">
+          <span class="status-chip" [ngClass]="r.returnTime ? 'chip-success' : 'chip-warning'">
+            {{ r.returnTime ? 'Returned' : 'Borrowed' }}
+          </span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let r">
+          <button mat-icon-button color="warn" matTooltip="Delete" [disabled]="deletingId === r.id" (click)="deleteBorrow(r)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </mat-card-content>
+</mat-card>

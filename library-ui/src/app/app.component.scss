@@ -1,0 +1,96 @@
+.sidenav-container {
+  height: 100vh;
+}
+
+.sidenav {
+  width: 230px;
+  background: linear-gradient(180deg, #1a237e 0%, #283593 60%, #3949ab 100%);
+  color: white;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+
+  .sidenav-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 20px 20px;
+    background: rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+    .logo-icon {
+      font-size: 34px;
+      width: 34px;
+      height: 34px;
+      color: #90caf9;
+      filter: drop-shadow(0 0 6px rgba(144, 202, 249, 0.5));
+    }
+
+    .logo-text {
+      font-size: 19px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 0.8px;
+    }
+  }
+
+  mat-divider {
+    border-color: rgba(255, 255, 255, 0.12) !important;
+  }
+
+  mat-nav-list {
+    padding-top: 10px;
+
+    a {
+      color: rgba(255, 255, 255, 0.88) !important;
+      margin: 3px 10px;
+      border-radius: 10px;
+      height: 48px;
+      transition: all 0.2s ease;
+
+      mat-icon {
+        color: rgba(255, 255, 255, 0.7) !important;
+        transition: color 0.2s;
+      }
+
+      span {
+        color: white !important;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.12) !important;
+        transform: translateX(4px);
+
+        mat-icon { color: #90caf9 !important; }
+      }
+
+      &.active-link {
+        background: rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+        mat-icon { color: #90caf9 !important; }
+        span { color: white !important; font-weight: 600; }
+      }
+    }
+  }
+}
+
+.toolbar {
+  background: linear-gradient(90deg, #1a237e 0%, #3949ab 100%) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f8;
+  min-height: 100vh;
+}
+
+.page-content {
+  padding: 28px;
+  flex: 1;
+}
