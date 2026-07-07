@@ -1,0 +1,92 @@
+<div class="page-header">
+  <h1><mat-icon style="vertical-align:middle;margin-right:8px">menu_book</mat-icon>Books</h1>
+  <p>Manage your library book collection</p>
+</div>
+
+<div class="card-grid">
+  <!-- Add Book Form -->
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>add_circle</mat-icon> Add New Book</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" #bookFormDirective="ngForm">
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Book Name</mat-label>
+          <input matInput formControlName="bookName" placeholder="e.g. Clean Code">
+          <mat-icon matSuffix>book</mat-icon>
+          <mat-error *ngIf="form.get('bookName')?.hasError('required')">Book name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Author</mat-label>
+          <input matInput formControlName="author" placeholder="e.g. Robert C. Martin">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error *ngIf="form.get('author')?.hasError('required')">Author is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Genre</mat-label>
+          <input matInput formControlName="genre" placeholder="e.g. Technology">
+          <mat-icon matSuffix>category</mat-icon>
+          <mat-error *ngIf="form.get('genre')?.hasError('required')">Genre is required</mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+            <mat-icon>save</mat-icon> {{ submitting ? 'Saving...' : 'Add Book' }}
+          </button>
+          <button mat-stroked-button type="button" (click)="form.reset()">Reset</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Book List -->
+  <mat-card class="list-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>list</mat-icon> All Books ({{ books.length }})</mat-card-title>
+      <span style="flex:1"></span>
+      <button mat-icon-button (click)="load()" matTooltip="Refresh"><mat-icon>refresh</mat-icon></button>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="spinner-overlay"><mat-spinner diameter="40"></mat-spinner></div>
+
+      <div *ngIf="!loading && books.length === 0" class="empty-state">
+        <mat-icon>inbox</mat-icon>
+        <p>No books found. Add one!</p>
+      </div>
+
+      <table mat-table [dataSource]="books" class="data-table" *ngIf="!loading && books.length > 0">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let b">{{ b.id }}</td>
+        </ng-container>
+        <ng-container matColumnDef="bookName">
+          <th mat-header-cell *matHeaderCellDef>Title</th>
+          <td mat-cell *matCellDef="let b"><strong>{{ b.bookName }}</strong></td>
+        </ng-container>
+        <ng-container matColumnDef="author">
+          <th mat-header-cell *matHeaderCellDef>Author</th>
+          <td mat-cell *matCellDef="let b">{{ b.author }}</td>
+        </ng-container>
+        <ng-container matColumnDef="genre">
+          <th mat-header-cell *matHeaderCellDef>Genre</th>
+          <td mat-cell *matCellDef="let b">
+            <span class="status-chip chip-success">{{ b.genre }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let b">
+            <button mat-icon-button color="warn" matTooltip="Delete" [disabled]="deletingId === b.id" (click)="deleteBook(b)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>

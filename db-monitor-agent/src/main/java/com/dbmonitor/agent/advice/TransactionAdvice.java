@@ -12,6 +12,11 @@ public class TransactionAdvice {
 
     @Advice.OnMethodEnter
     static long enter() {
+
+        if (!AgentConfig.ENABLE_TRANSACTION) {
+            return 0L;
+        }
+
         return System.nanoTime();
     }
 

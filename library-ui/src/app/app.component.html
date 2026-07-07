@@ -1,0 +1,36 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #sidenav mode="side" opened class="sidenav">
+    <div class="sidenav-header">
+      <mat-icon class="logo-icon">local_library</mat-icon>
+      <span class="logo-text">LibraryApp</span>
+    </div>
+    <mat-divider></mat-divider>
+    <mat-nav-list>
+      <a mat-list-item routerLink="/books" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>menu_book</mat-icon>
+        <span matListItemTitle>Books</span>
+      </a>
+      <a mat-list-item routerLink="/members" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>people</mat-icon>
+        <span matListItemTitle>Members</span>
+      </a>
+      <a mat-list-item routerLink="/borrow" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>swap_horiz</mat-icon>
+        <span matListItemTitle>Borrow / Return</span>
+      </a>
+      <a mat-list-item routerLink="/monitor" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>monitor_heart</mat-icon>
+        <span matListItemTitle>DB Monitor</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="main-content">
+    <mat-toolbar color="primary" class="toolbar">
+      <span>Library Management System</span>
+    </mat-toolbar>
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

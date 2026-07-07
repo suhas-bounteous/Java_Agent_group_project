@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "library-backend",
+      "runtimeExecutable": "C:\\Users\\SuhasS\\ONEDRI~1\\Desktop\\Library\\lib\\mvnw.cmd",
+      "runtimeArgs": ["-f", "C:\\Users\\SuhasS\\ONEDRI~1\\Desktop\\Library\\lib\\pom.xml", "spring-boot:run"],
+      "port": 8080
+    },
+    {
+      "name": "library-frontend",
+      "runtimeExecutable": "C:\\Users\\SuhasS\\node18\\node-v18.10.0-win-x64\\npm.cmd",
+      "runtimeArgs": ["--prefix", "C:\\Users\\SuhasS\\OneDrive - Bounteous\\Documents\\Library frontend\\library-ui", "start"],
+      "port": 4400
+    }
+  ]
+}

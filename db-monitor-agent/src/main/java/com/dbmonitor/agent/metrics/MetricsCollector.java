@@ -6,26 +6,24 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class MetricsCollector {
 
-    private static final AtomicLong totalQueries = new AtomicLong();
-    private static final AtomicLong totalUpdates = new AtomicLong();
-    private static final AtomicLong totalErrors = new AtomicLong();
-    private static final AtomicLong totalLatencyNs = new AtomicLong();
+    private static final AtomicLong totalQueries       = new AtomicLong();
+    private static final AtomicLong totalUpdates       = new AtomicLong();
+    private static final AtomicLong totalErrors        = new AtomicLong();
+    private static final AtomicLong totalLatencyNs     = new AtomicLong();
+    private static final AtomicLong commits            = new AtomicLong();
+    private static final AtomicLong rollbacks          = new AtomicLong();
+    private static final AtomicLong activeConnections  = new AtomicLong();
+    private static final AtomicLong slowQueries        = new AtomicLong();
 
-    private static final AtomicLong commits = new AtomicLong();
-    private static final AtomicLong rollbacks = new AtomicLong();
-    private static final AtomicLong activeConnections = new AtomicLong();
-    private static final AtomicLong slowQueries = new AtomicLong();
-
-    // ---- Recording methods ----
+    // ── Recording methods (called by advice classes) ──────────────────────────
 
     public static void recordQuery(long durationNs, boolean success, String type) {
-
         if ("QUERY".equals(type)) {
             totalQueries.incrementAndGet();
         } else if ("UPDATE".equals(type)) {
             totalUpdates.incrementAndGet();
         } else if ("BATCH".equals(type)) {
-            totalUpdates.incrementAndGet(); // treat batch as update
+            totalUpdates.incrementAndGet();
         }
 
         totalLatencyNs.addAndGet(durationNs);
@@ -45,18 +43,33 @@ public class MetricsCollector {
         } else if ("ROLLBACK".equals(type)) {
             rollbacks.incrementAndGet();
         }
-
         if (!success) {
             totalErrors.incrementAndGet();
         }
     }
 
-    // ---- Snapshot + Reset ----
+    public static void connectionOpened() {
+        activeConnections.incrementAndGet();
+    }
+
+    public static void connectionClosed() {
+        activeConnections.decrementAndGet();
+    }
+
+    // ── Guard: only true when real DB activity occurred since last reset ──────
+
+    public static boolean hasActivity() {
+        return totalQueries.get()   > 0
+            || totalUpdates.get()   > 0
+            || totalErrors.get()    > 0
+            || commits.get()        > 0
+            || rollbacks.get()      > 0;
+    }
+
+    // ── Snapshot and reset (called only when hasActivity() is true) ───────────
 
     public static MetricsSnapshot snapshotAndReset() {
-
         MetricsSnapshot snapshot = new MetricsSnapshot();
-
         snapshot.setTotalQueries(totalQueries.getAndSet(0));
         snapshot.setTotalUpdates(totalUpdates.getAndSet(0));
         snapshot.setTotalErrors(totalErrors.getAndSet(0));
@@ -65,15 +78,6 @@ public class MetricsCollector {
         snapshot.setRollbacks(rollbacks.getAndSet(0));
         snapshot.setActiveConnections(activeConnections.get());
         snapshot.setSlowQueries(slowQueries.getAndSet(0));
-
-
         return snapshot;
-    }
-    public static void connectionOpened() {
-        activeConnections.incrementAndGet();
-    }
-
-    public static void connectionClosed() {
-        activeConnections.decrementAndGet();
     }
 }

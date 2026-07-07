@@ -1,0 +1,96 @@
+<div class="page-header">
+  <h1><mat-icon style="vertical-align:middle;margin-right:8px">people</mat-icon>Members</h1>
+  <p>Manage library members</p>
+</div>
+
+<div class="card-grid">
+  <!-- Add Member Form -->
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>person_add</mat-icon> Add New Member</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" #memberFormDirective="ngForm">
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Full Name</mat-label>
+          <input matInput formControlName="name" placeholder="e.g. John Doe" [errorStateMatcher]="matcher">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-error>Name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" placeholder="e.g. john@example.com" type="email" [errorStateMatcher]="matcher">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-error *ngIf="form.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="form.get('email')?.hasError('email')">Enter a valid email</mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="outline">
+          <mat-label>Age</mat-label>
+          <input matInput formControlName="age" type="number" placeholder="e.g. 25" [errorStateMatcher]="matcher">
+          <mat-icon matSuffix>cake</mat-icon>
+          <mat-error *ngIf="form.get('age')?.hasError('required')">Age is required</mat-error>
+          <mat-error *ngIf="form.get('age')?.hasError('min')">Age must be at least 1</mat-error>
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="submitting">
+            <mat-icon>save</mat-icon> {{ submitting ? 'Saving...' : 'Add Member' }}
+          </button>
+          <button mat-stroked-button type="button" (click)="resetForm()">Reset</button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Member List -->
+  <mat-card class="list-card">
+    <mat-card-header>
+      <mat-card-title><mat-icon>list</mat-icon> All Members ({{ members.length }})</mat-card-title>
+      <span style="flex:1"></span>
+      <button mat-raised-button color="primary" (click)="load()" [disabled]="loading" class="get-btn">
+        <mat-icon>download</mat-icon> {{ loading ? 'Loading...' : 'Get Members' }}
+      </button>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="loading" class="spinner-overlay"><mat-spinner diameter="40"></mat-spinner></div>
+
+      <div *ngIf="!loading && members.length === 0" class="empty-state">
+        <mat-icon>group_off</mat-icon>
+        <p>Click "Get Members" to load the member list.</p>
+      </div>
+
+      <table mat-table [dataSource]="members" class="data-table" *ngIf="!loading && members.length > 0">
+        <ng-container matColumnDef="id">
+          <th mat-header-cell *matHeaderCellDef>#</th>
+          <td mat-cell *matCellDef="let m">{{ m.id }}</td>
+        </ng-container>
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Name</th>
+          <td mat-cell *matCellDef="let m"><strong>{{ m.name }}</strong></td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef>Email</th>
+          <td mat-cell *matCellDef="let m">{{ m.email }}</td>
+        </ng-container>
+        <ng-container matColumnDef="age">
+          <th mat-header-cell *matHeaderCellDef>Age</th>
+          <td mat-cell *matCellDef="let m">
+            <span class="status-chip chip-warning">{{ m.age }}</span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Actions</th>
+          <td mat-cell *matCellDef="let m">
+            <button mat-icon-button color="warn" matTooltip="Delete" [disabled]="deletingId === m.id" (click)="deleteMember(m)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+</div>
