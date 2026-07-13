@@ -1,38 +1,49 @@
 package com.example.JavaAgentBackend.controller;
 
-import com.example.JavaAgentBackend.entity.DbConnectionEventEntity;
-import com.example.JavaAgentBackend.model.DbConnectionEvent;
-import com.example.JavaAgentBackend.repository.DbConnectionEventRepository;
+import com.example.JavaAgentBackend.dto.EventDTO;
+import com.example.JavaAgentBackend.dto.EventStatsDTO;
+import com.example.JavaAgentBackend.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/events")
 public class EventController {
+
     @Autowired
-   DbConnectionEventRepository repository;
+    private EventService eventService;
 
     @PostMapping
-    public void receive(@RequestBody List<DbConnectionEvent> events) {
-        System.out.println("Receiving data");
-        List<DbConnectionEventEntity> entities = events.stream().map(e -> {
-            DbConnectionEventEntity entity = new DbConnectionEventEntity();
-            entity.setApplicationName(e.getApplicationName());
-            entity.setHostName(e.getHostName());
-            entity.setJvmId(e.getJvmId());
-            entity.setDatabaseType(e.getDatabaseType());
-            entity.setOperationType(e.getOperationType());
-            entity.setTimestamp(e.getTimestamp());
-            entity.setDurationNs(e.getDurationNs());
-            entity.setSuccess(e.isSuccess());
-            entity.setMetadata(e.getMetadata());
-            return entity;
-        }).toList();
-        repository.saveAll(entities);
+    public void receive(@RequestBody List<EventDTO> events) {
+        if (events == null || events.isEmpty()) return;
+        System.out.println("Received events: " + events.size());
+        eventService.processEvents(events);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<EventDTO>> getEvents(
+            @RequestParam(defaultValue = "100") int limit,
+            @RequestParam(required = false) String appName,
+            @RequestParam(required = false) String operationType) {
+        return ResponseEntity.ok(eventService.getRecentEvents(limit, appName, operationType));
+    }
+
+    @GetMapping("/slow-queries")
+    public ResponseEntity<List<EventDTO>> getSlowQueries(
+            @RequestParam(defaultValue = "20") int limit) {
+        return ResponseEntity.ok(eventService.getSlowQueries(limit));
+    }
+
+    @GetMapping("/applications")
+    public ResponseEntity<List<String>> getApplicationNames() {
+        return ResponseEntity.ok(eventService.getApplicationNames());
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<EventStatsDTO> getStats() {
+        return ResponseEntity.ok(eventService.getStats());
     }
 }
